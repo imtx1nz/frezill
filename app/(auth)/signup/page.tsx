@@ -2,14 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { GoogleButton, OrDivider } from "@/components/auth/GoogleButton";
 import { enabledProviders } from "@/lib/auth/providers";
-import { safeNext } from "@/lib/auth/redirect";
 import { SignupForm } from "./SignupForm";
 
 export const metadata: Metadata = { title: "สมัครสมาชิก" };
 
-export default async function SignupPage({ searchParams }: PageProps<"/signup">) {
-  const [sp, { google }] = await Promise.all([searchParams, enabledProviders()]);
-  const next = typeof sp.next === "string" ? safeNext(sp.next) : undefined;
+export default async function SignupPage() {
+  const { google } = await enabledProviders();
   return (
     <div className="flex flex-col gap-7">
       <header>
@@ -18,14 +16,14 @@ export default async function SignupPage({ searchParams }: PageProps<"/signup">)
       </header>
       {google && (
         <>
-          <GoogleButton next={next} label="สมัครด้วย Google" />
+          <GoogleButton label="สมัครด้วย Google" />
           <OrDivider />
         </>
       )}
-      <SignupForm next={next} />
+      <SignupForm />
       <p className="text-center text-ink-2">
         มีบัญชีแล้ว?{" "}
-        <Link href={next ? `/login?next=${encodeURIComponent(next)}` : "/login"} className="font-semibold text-brand underline-offset-4 hover:underline">
+        <Link href="/login" className="font-semibold text-brand underline-offset-4 hover:underline">
           เข้าสู่ระบบ
         </Link>
       </p>

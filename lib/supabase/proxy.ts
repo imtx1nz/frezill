@@ -1,8 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { safeNext } from "@/lib/auth/redirect";
 
-const PUBLIC_PATHS = ["/", "/login", "/signup", "/forgot-password", "/auth", "/join"];
+const PUBLIC_PATHS = ["/", "/login", "/signup", "/forgot-password", "/auth"];
 const AUTH_ONLY_PATHS = ["/login", "/signup"];
 
 const matches = (path: string, list: string[]) =>
@@ -51,14 +50,7 @@ export async function updateSession(request: NextRequest) {
     return redirectTo("/login", path + request.nextUrl.search);
   }
   if (user && matches(path, AUTH_ONLY_PATHS)) {
-    const next = safeNext(request.nextUrl.searchParams.get("next"));
-    const url = request.nextUrl.clone();
-    const [pathname, search = ""] = next.split("?");
-    url.pathname = pathname;
-    url.search = search ? `?${search}` : "";
-    const res = NextResponse.redirect(url);
-    response.cookies.getAll().forEach((c) => res.cookies.set(c));
-    return res;
+    return redirectTo("/today");
   }
 
   return response;
