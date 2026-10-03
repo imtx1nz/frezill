@@ -17,3 +17,7 @@ dist/
 # misc
 .DS_Store
 *.log
+/coverage
+*.tsbuildinfo
+next-env.d.ts
+npm-debug.log*

@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+:root {
+  --ice: #eef5f1;
+  --surface: #ffffff;
+  --ink: #12201a;
+  --ink-2: #47594f;
+  --ink-3: #6b7d73;
+  --line: #d3e1d9;
+  --brand: #0b7a5c;
+  --brand-ink: #075f47;
+  --brand-soft: #dcefe6;
+  --danger: #b42318;
+  --danger-soft: #fdecea;
+  --warn: #c2620c;
+  --warn-soft: #fff1e2;
+  --soon: #a77b06;
+  --soon-soft: #fff7d6;
+}
+
+@theme inline {
+  --color-ice: var(--ice);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-soft: var(--brand-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-soon: var(--soon);
+  --color-soon-soft: var(--soon-soft);
+  --font-sans: var(--font-anuphan), ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--ice);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+::selection {
+  background: var(--brand);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 3px solid color-mix(in oklab, var(--brand) 55%, white);
+  outline-offset: 2px;
+}
+
+input {
+  caret-color: var(--brand);
+}
+
+a {
+  text-underline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
