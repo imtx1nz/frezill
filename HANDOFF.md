@@ -4,7 +4,7 @@
 
 ## สถานะ
 - ✅ M0: Next.js 16 + Tailwind 4 + Supabase client + Vitest, deploy แล้วที่ https://frezill.vercel.app (Vercel project `frezill`)
-- ✅ M1 โค้ดเสร็จแล้ว รอทดสอบกับ Supabase จริง: สมัครและล็อกอิน (อีเมล + Google), ลืมรหัสและตั้งรหัสใหม่, ออกจากระบบ, proxy กันหน้าที่ต้องล็อกอิน, trigger สร้างบ้านและตู้ให้อัตโนมัติ, RLS
+- ✅ M1 ใช้งานได้จริงบน production (ผู้ใช้ล็อกอินด้วย Google ผ่านเมื่อ 2026-10-04): สมัครและล็อกอิน (อีเมล + Google), ลืมรหัสและตั้งรหัสใหม่, ออกจากระบบ, proxy กันหน้าที่ต้องล็อกอิน, trigger สร้างบ้านและตู้ให้อัตโนมัติ, RLS
 - ⏳ M1 ที่ยังเหลือ: เชิญสมาชิกด้วยลิงก์หรือรหัส (`/join/[code]`) + เทสว่า RLS กันข้ามบ้านได้จริง
 
 ## ไฟล์สำคัญ
@@ -24,6 +24,7 @@ npm test
 ## Deploy
 - `npx vercel deploy --prod` (CLI ล็อกอินบัญชี imtx1nz และ link ไว้ใน `.vercel/` แล้ว)
 - env บน Vercel (Production): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (ตัวหลังเป็น publishable key)
+- Google OAuth เปิดแล้ว (client อยู่ใน Google Cloud ของผู้ใช้ ปุ่มแสดงอัตโนมัติจาก `lib/auth/providers.ts`)
 - ยังไม่ได้ต่อ GitHub auto-deploy: `vercel git connect` ไม่ผ่าน ต้องติดตั้ง Vercel GitHub App ก่อน
 - Supabase project ref: `wlprvlbdohsjjljrggpk` ตอนนี้ migration 0001 รันแล้ว
 
