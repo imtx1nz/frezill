@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Noto Sans Thai","Noto Sans Thai UI",sans-serif;background:#eef0f2;color:#1d2329;padding:40px}
+h1{font-size:30px;font-weight:700;margin-bottom:4px}
+.sub{color:#5b6670;font-size:15px;margin-bottom:28px}
+.row{display:flex;gap:28px;align-items:flex-start}
+.page{display:flex;gap:22px;align-items:flex-start}
+.cap{font-size:13px;font-weight:700;letter-spacing:.04em;color:#0b7a5c;margin-bottom:8px;text-transform:uppercase}
+.ttl{font-size:20px;font-weight:700;margin-bottom:12px}
+.phone{width:390px;height:844px;background:#fff;border:10px solid #1d2329;border-radius:46px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.status{height:34px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 24px;font-size:12px;color:#8a949c}
+.scr{flex:1;padding:6px 16px 16px;display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.b{background:#e3e7ea;border:1.5px dashed #9aa5ae;border-radius:12px;position:relative;display:flex;align-items:center;justify-content:center;text-align:center;font-size:13px;color:#4c5862;padding:8px;line-height:1.35}
+.b.solid{border-style:solid}
+.b.pri{background:#0b7a5c;border:none;color:#fff;font-weight:700}
+.b.sec{background:#fff;border:1.5px solid #1d2329;color:#1d2329;font-weight:600}
+.b.ai{background:#fff4dc;border:1.5px solid #e2a32a;color:#7a5200}
+.b.red{background:#fde7e7;border:1.5px solid #d64545;color:#8f1f1f}
+.b.org{background:#fff0e0;border:1.5px solid #e07a1f;color:#8a4300}
+.b.grn{background:#e3f4ec;border:1.5px solid #2f9e6e;color:#17603f}
+.b.img{background:repeating-linear-gradient(45deg,#e3e7ea 0 10px,#d8dde1 10px 20px)}
+.n{position:absolute;top:-8px;left:-8px;width:22px;height:22px;border-radius:50%;background:#e2365b;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;z-index:2;font-family:sans-serif}
+.h{display:flex;gap:8px}.h>*{flex:1}
+.nav{height:64px;flex:none;border-top:1.5px solid #c9d0d5;display:flex;justify-content:space-around;align-items:center;font-size:11px;color:#5b6670;position:relative}
+.nav div{display:flex;flex-direction:column;align-items:center;gap:3px}
+.nav i{width:22px;height:22px;border-radius:6px;background:#c9d0d5;display:block}
+.nav .on{color:#0b7a5c;font-weight:700}.nav .on i{background:#0b7a5c}
+.nav .plus i{width:44px;height:44px;border-radius:50%;background:#0b7a5c;margin-top:-26px;border:4px solid #fff}
+.notes{width:330px;font-size:14px;line-height:1.5}
+.notes ol{list-style:none;display:flex;flex-direction:column;gap:9px}
+.notes li{display:flex;gap:10px}
+.notes li b.k{flex:none;width:22px;height:22px;border-radius:50%;background:#e2365b;color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;font-family:sans-serif;margin-top:1px}
+.notes .goal{background:#fff;border-left:4px solid #0b7a5c;padding:10px 12px;border-radius:6px;margin-bottom:14px;font-size:14px}
+.notes .next{margin-top:14px;background:#1d2329;color:#fff;padding:10px 12px;border-radius:8px;font-size:13px}
+.legend{display:flex;gap:14px;font-size:12px;color:#5b6670;margin-top:22px;flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:6px}.legend i{width:16px;height:12px;border-radius:3px;display:inline-block}
+.arrow{align-self:center;font-size:44px;color:#0b7a5c;margin-top:300px}
+.mini .notes{display:none}
+</style></head><body>
+<div id="root"></div>
+<script>
+const P = {
+landing:{cap:"หน้า 1 · เข้าเว็บครั้งแรก (ยังไม่ล็อกอิน)",ttl:"Landing",
+goal:"เป้าหมาย: เข้าใจใน 5 วินาทีว่าแอปทำอะไร แล้วกด “เริ่มใช้ฟรี”",
+screen:`
+<div class="h" style="flex:none;height:44px"><div class="b solid" style="flex:0 0 120px"><span class="n">1</span>โลโก้ frezill</div><div style="flex:1"></div><div class="b sec" style="flex:0 0 110px">เข้าสู่ระบบ</div></div>
+<div class="b img" style="height:230px;flex-direction:column"><span class="n">2</span>ภาพตู้เย็น 2.5D เปิดประตู<br>ของวางตามโซน · ขยับตามนิ้ว/เมาส์ (parallax)<br>ของใกล้หมดมีป้าย “ซาก” 🦴</div>
+<div class="b solid" style="height:84px;font-size:18px;font-weight:700;color:#1d2329;flex-direction:column"><span class="n">3</span>ตู้เย็นของทั้งบ้านในมือถือ<br>เตือนก่อนของเป็นซาก</div>
+<div class="b" style="height:40px">คำอธิบาย 1 บรรทัด: บันทึก · เตือน · บอกว่าคืนนี้ทำอะไรกิน</div>
+<div class="b pri" style="height:52px;font-size:16px"><span class="n">4</span>เริ่มใช้ฟรี →</div>
+<div class="h" style="height:112px"><div class="b grn" style="flex-direction:column"><span class="n">5</span>📦<br>จดของเข้าตู้<br>ใน 3 แตะ</div><div class="b org">🔔<br>เตือนก่อน<br>หมดอายุ</div><div class="b ai">✨<br>AI เมนู<br>เคลียร์ของ</div></div>
+<div class="b" style="height:70px"><span class="n">6</span>วิธีใช้ 3 ขั้น: เพิ่มของ → รับแจ้งเตือน → ทำเมนู</div>
+<div class="b solid" style="height:46px"><span class="n">7</span>📲 ติดตั้งเป็นแอปบนมือถือ (คู่มือ iPhone)</div>`,
+notes:[
+"Header เรียบ: โลโก้ + “เข้าสู่ระบบ” สำหรับคนที่มีบัญชีแล้ว",
+"Hero = ภาพตู้เย็น 2.5D เป็นจุดดึงสายตาที่สุดของหน้า ขยับตามนิ้ว/เมาส์",
+"หัวข้อใหญ่ 1 ประโยค บอกสิ่งที่แอปทำ",
+"CTA หลักปุ่มเดียว สีเด่นที่สุดในหน้า อยู่เหนือขอบจอแรก",
+"3 ฟีเจอร์หลักเป็นการ์ดสั้น ใช้สีตามระบบสถานะ",
+"วิธีใช้ 3 ขั้น ลดความกังวลว่า “ต้องจดเยอะไหม”",
+"แบนเนอร์ติดตั้ง PWA (จำเป็นสำหรับแจ้งเตือนบน iPhone)"],
+next:"กด “เริ่มใช้ฟรี” → หน้า 2 สมัครสมาชิก"},
+
+signup:{cap:"หน้า 2 · สมัคร + ตั้งค่าบ้าน",ttl:"Sign up → Onboarding",
+goal:"เป้าหมาย: สมัครเสร็จใน 30 วินาที แล้วได้บ้าน + ตู้เย็นพร้อมใช้ทันที",
+screen:`
+<div class="h" style="flex:none;height:40px"><div class="b solid" style="flex:0 0 44px">←</div><div class="b solid" style="flex:1"><span class="n">1</span>ขั้น 1/3 ●○○</div></div>
+<div class="b solid" style="height:70px;font-size:18px;font-weight:700;color:#1d2329;flex-direction:column">สร้างบัญชี<span style="font-size:13px;font-weight:400">เพื่อบันทึกตู้เย็นของบ้านคุณ</span></div>
+<div class="b sec" style="height:52px"><span class="n">2</span>G  สมัครด้วย Google</div>
+<div class="b" style="height:22px;border:none;background:none">──── หรือ ────</div>
+<div class="b" style="height:52px;justify-content:flex-start"><span class="n">3</span>ชื่อเล่น</div>
+<div class="b" style="height:52px;justify-content:flex-start">อีเมล</div>
+<div class="b" style="height:52px;justify-content:flex-start">รหัสผ่าน 👁</div>
+<div class="b pri" style="height:52px;font-size:16px"><span class="n">4</span>สร้างบัญชี</div>
+<div class="b" style="height:30px;border:none;background:none">มีบัญชีแล้ว? เข้าสู่ระบบ · มีรหัสเชิญ? <u>เข้าร่วมบ้าน</u></div>
+<div class="b solid" style="height:186px;flex-direction:column;gap:8px;align-items:stretch;background:#f6f8f9"><span class="n">5</span>
+<div style="font-weight:700;color:#1d2329">ถัดไป (ขั้น 2–3)</div>
+<div class="b grn" style="height:38px">🏠 ตั้งชื่อบ้าน (เติมให้: “บ้านของน้อย”)</div>
+<div class="b org" style="height:38px">🔔 เปิดแจ้งเตือน + เลือกเวลา 16:30</div>
+<div class="b" style="height:38px">👨‍👩‍👧 เชิญคนในบ้าน (ข้ามได้)</div></div>`,
+notes:[
+"แถบขั้นตอน 1/3 ให้รู้ว่าอีกไม่นานเสร็จ",
+"Google ปุ่มแรก เร็วที่สุดสำหรับลูกวัยรุ่น",
+"ฟอร์มแค่ 3 ช่อง ตัวหนังสือ ≥16px ช่องสูง ≥44px",
+"CTA หลักปุ่มเดียว",
+"Onboarding ขั้น 2–3: ระบบสร้างบ้าน + ตู้ให้อัตโนมัติ ผู้ใช้แค่ยืนยันชื่อ, เปิดแจ้งเตือน, เชิญสมาชิก (ข้ามได้)"],
+next:"จบ onboarding → หน้า 3 “วันนี้” (หน้าแรกทุกครั้งที่เปิดแอป)"},
+
+today:{cap:"หน้า 3 · หน้าแรกหลังล็อกอิน",ttl:"วันนี้ (สรุปรายวัน)",
+goal:"เป้าหมาย: เปิดมาแล้วรู้ทันทีว่า “วันนี้ต้องใช้อะไร” และกดต่อไปทำเมนูได้",
+screen:`
+<div class="h" style="flex:none;height:48px"><div class="b solid" style="flex:1;justify-content:flex-start"><span class="n">1</span>สวัสดี แม่น้อย 👋 · บ้านของน้อย ▾</div><div class="b solid" style="flex:0 0 48px">🔔</div></div>
+<div class="h" style="height:76px"><div class="b red"><span class="n">2</span><b style="font-size:20px">2</b>&nbsp;หมดแล้ว</div><div class="b org"><b style="font-size:20px">3</b>&nbsp;ใช้วันนี้</div><div class="b grn" style="background:#fff7d6;border-color:#d1a516;color:#6b5300"><b style="font-size:20px">5</b>&nbsp;ใกล้หมด</div></div>
+<div class="b solid" style="height:28px;border:none;background:none;justify-content:flex-start;font-weight:700;color:#1d2329"><span class="n">3</span>&nbsp;&nbsp;ต้องใช้วันนี้</div>
+<div class="b org" style="height:60px;justify-content:space-between"><span>🥩 หมูสับ 300 ก. · หมดพรุ่งนี้</span><span class="b sec" style="padding:4px 8px;font-size:12px">ใช้แล้ว</span></div>
+<div class="b org" style="height:60px;justify-content:space-between"><span>🥬 ผักบุ้ง 1 กำ · ≈ เดา</span><span class="b sec" style="padding:4px 8px;font-size:12px">ใช้แล้ว</span></div>
+<div class="b red" style="height:60px;justify-content:space-between"><span>🥛 นมจืด · เปิดแล้ว 8 วัน</span><span class="b sec" style="padding:4px 8px;font-size:12px">ทิ้ง</span></div>
+<div class="b ai" style="height:96px;flex-direction:column;gap:6px"><span class="n">4</span><b style="font-size:16px">✨ คืนนี้ทำอะไรดี?</b>AI เสนอ 3 เมนูที่ใช้หมูสับ + ผักบุ้งก่อน<span class="b pri" style="padding:5px 14px;font-size:13px">ดูเมนู →</span></div>
+<div class="h" style="height:120px"><div class="b img"><span class="n">5</span>ตู้เย็นย่อ 2.5D<br>แตะโซน → หน้าตู้</div><div class="b grn" style="flex:0 0 120px"><span class="n">6</span>เดือนนี้<br>ใช้ทัน 18<br>ทิ้ง 2</div></div>`,
+nav:true,
+notes:[
+"ทักทาย + สลับบ้าน (1 คนอยู่ได้หลายบ้าน) + กระดิ่ง",
+"ตัวเลข 3 สถานะ แตะแล้วกรองรายการ — สีมีตัวเลข/ข้อความกำกับเสมอ",
+"รายการ “ต้องใช้วันนี้” เรียงตามวันหมดอายุ มีปุ่มลัด 1 แตะ (ใช้แล้ว/ทิ้ง) ป้าย “≈ เดา” ถ้าระบบเดาวันให้",
+"การ์ด AI เมนู = ทางไปต่อหลักของหน้า บอกว่าจะใช้ของชิ้นไหน",
+"ตู้เย็นย่อ 2.5D เชื่อมไปหน้าตู้ (แบรนด์)",
+"สถิติเล็ก ให้กำลังใจ ไม่ทำให้รู้สึกผิด",
+"Bottom nav: วันนี้ · ตู้เย็น · ➕ เพิ่มของ (ปุ่มกลางใหญ่) · เมนู · ตั้งค่า"],
+next:"ต่อไป: ➕ เพิ่มของ / ดูเมนู AI / ตู้เย็น"}
+};
+const navHTML=`<div class="nav"><span class="n" style="top:-10px;left:6px">7</span><div class="on"><i></i>วันนี้</div><div><i></i>ตู้เย็น</div><div class="plus"><i></i>เพิ่มของ</div><div><i></i>เมนู</div><div><i></i>ตั้งค่า</div></div>`;
+function page(k){const p=P[k];return `<div class="page"><div><div class="cap">${p.cap}</div><div class="ttl">${p.ttl}</div>
+<div class="phone"><div class="status"><span>16:30</span><span>frezill.app</span><span>▮▮▮ 🔋</span></div><div class="scr">${p.screen}</div>${p.nav?navHTML:""}</div></div>
+<div class="notes" style="margin-top:62px"><div class="goal">${p.goal}</div><ol>${p.notes.map((t,i)=>`<li><b class="k">${i+1}</b><span>${t}</span></li>`).join("")}</ol><div class="next">➜ ${p.next}</div></div></div>`}
+const legend=`<div class="legend"><span><i style="background:#e3e7ea;border:1px dashed #9aa5ae"></i>บล็อกเนื้อหา</span><span><i style="background:#0b7a5c"></i>CTA หลัก</span><span><i style="background:#fde7e7;border:1px solid #d64545"></i>หมดแล้ว</span><span><i style="background:#fff0e0;border:1px solid #e07a1f"></i>ใช้วันนี้</span><span><i style="background:#e3f4ec;border:1px solid #2f9e6e"></i>ปลอดภัย/ดี</span><span><i style="background:#fff4dc;border:1px solid #e2a32a"></i>AI</span><span><i class="" style="background:repeating-linear-gradient(45deg,#e3e7ea 0 4px,#d8dde1 4px 8px)"></i>ภาพ/2.5D</span></div>`;
+const q=new URLSearchParams(location.search).get("p");
+const r=document.getElementById("root");
+if(q==="flow"){document.body.classList.add("mini");
+ r.innerHTML=`<h1>frezill — Page Blocking: Flow ผู้ใช้ใหม่</h1><div class="sub">เข้าเว็บ → สมัคร → หน้าแรก “วันนี้” · มือถือ 390×844</div><div class="row">${page("landing")}<div class="arrow">→</div>${page("signup")}<div class="arrow">→</div>${page("today")}</div>${legend}`;}
+else{r.innerHTML=`<h1>frezill — Page Blocking</h1><div class="sub">Wireframe ระดับบล็อก · มือถือ 390×844 · ตัวเลขชมพู = คำอธิบายด้านขวา</div>${page(q)}${legend}`;}
+</script></body></html>
