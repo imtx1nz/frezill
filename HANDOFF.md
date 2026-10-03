@@ -3,7 +3,7 @@
 **อัปเดต:** 2026-10-03 · กฎการพัฒนาอยู่ที่ `.claude/skills/frezill-dev/SKILL.md`
 
 ## สถานะ
-- ✅ M0 (บางส่วน): Next.js 16 + Tailwind 4 + Supabase client + Vitest ยังไม่ได้ deploy Vercel
+- ✅ M0: Next.js 16 + Tailwind 4 + Supabase client + Vitest, deploy แล้วที่ https://frezill.vercel.app (Vercel project `frezill`)
 - ✅ M1 โค้ดเสร็จแล้ว รอทดสอบกับ Supabase จริง: สมัครและล็อกอิน (อีเมล + Google), ลืมรหัสและตั้งรหัสใหม่, ออกจากระบบ, proxy กันหน้าที่ต้องล็อกอิน, trigger สร้างบ้านและตู้ให้อัตโนมัติ, RLS
 - ⏳ M1 ที่ยังเหลือ: เชิญสมาชิกด้วยลิงก์หรือรหัส (`/join/[code]`) + เทสว่า RLS กันข้ามบ้านได้จริง
 
@@ -20,6 +20,12 @@ cp .env.example .env.local   # ใส่ NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_
 npm run dev
 npm test
 ```
+
+## Deploy
+- `npx vercel deploy --prod` (CLI ล็อกอินบัญชี imtx1nz และ link ไว้ใน `.vercel/` แล้ว)
+- env บน Vercel (Production): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (ตัวหลังเป็น publishable key)
+- ยังไม่ได้ต่อ GitHub auto-deploy: `vercel git connect` ไม่ผ่าน ต้องติดตั้ง Vercel GitHub App ก่อน
+- Supabase project ref: `wlprvlbdohsjjljrggpk` ตอนนี้ migration 0001 รันแล้ว
 
 ## Gotchas
 - Next 16 เปลี่ยนชื่อ middleware เป็น `proxy.ts` และ `PageProps`/`LayoutProps` เป็น global type ที่ได้จาก `next typegen`
