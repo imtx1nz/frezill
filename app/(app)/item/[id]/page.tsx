@@ -15,7 +15,7 @@ export default async function ItemPage({ params, searchParams }: PageProps<"/ite
   const supabase = await createClient();
   const { data: lot } = await supabase
     .from("lots")
-    .select("id, name, qty, unit, category, zone")
+    .select("id, name, qty, unit, category, zone, expires_at")
     .eq("id", id)
     .maybeSingle();
   if (!lot) notFound();

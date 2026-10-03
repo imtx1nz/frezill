@@ -4,7 +4,7 @@ export const inputClass =
   "h-13 w-full rounded-xl border border-line bg-surface px-4 text-base text-ink outline-none transition-[border-color,box-shadow] duration-150 focus:border-brand focus:shadow-[0_0_0_4px_var(--brand-soft)]";
 const labelClass = "flex flex-col gap-1.5 text-[0.9375rem] font-semibold";
 
-type Lot = { name: string; qty: number; unit: string; category: string; zone: string };
+type Lot = { name: string; qty: number; unit: string; category: string; zone: string; expires_at: string | null };
 
 export function LotFields({ lot }: { lot?: Lot }) {
   return (
@@ -37,6 +37,10 @@ export function LotFields({ lot }: { lot?: Lot }) {
           </datalist>
         </label>
       </div>
+      <label className={labelClass}>
+        วันหมดอายุ (ไม่บังคับ)
+        <input name="expires_at" type="date" defaultValue={lot?.expires_at ?? ""} className={inputClass} />
+      </label>
       <label className={labelClass}>
         หมวดหมู่
         <select name="category" defaultValue={lot?.category ?? "other"} className={inputClass}>

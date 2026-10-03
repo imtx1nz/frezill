@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fefo } from "./inventory";
+import { fefo, lotSchema } from "./inventory";
 
 const lot = (id: string, qty: number, expires_at: string | null, created_at = "2026-10-01T00:00:00Z") => ({
   id,
@@ -51,5 +51,17 @@ describe("fefo", () => {
     const lots = [lot("b", 1, "2026-10-09"), lot("a", 1, "2026-10-05")];
     expect(fefo(lots, 0)).toEqual([]);
     expect(lots[0].id).toBe("b");
+  });
+});
+
+describe("lotSchema expires_at", () => {
+  const base = { name: "ไข่ไก่", qty: "4", unit: "ฟอง", category: "dairy_egg", zone: "chill" };
+  it("empty date input = null", () => {
+    expect(lotSchema.parse({ ...base, expires_at: "" }).expires_at).toBeNull();
+    expect(lotSchema.parse({ ...base, expires_at: null }).expires_at).toBeNull();
+  });
+  it("keeps a valid date and rejects garbage", () => {
+    expect(lotSchema.parse({ ...base, expires_at: "2026-10-05" }).expires_at).toBe("2026-10-05");
+    expect(lotSchema.safeParse({ ...base, expires_at: "5/10/2026" }).success).toBe(false);
   });
 });

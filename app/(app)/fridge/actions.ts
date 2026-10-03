@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { fefo, lotSchema } from "@/lib/inventory";
 
-const fields = (fd: FormData) => Object.fromEntries(["name", "qty", "unit", "category", "zone"].map((k) => [k, fd.get(k)]));
+const fields = (fd: FormData) => Object.fromEntries(["name", "qty", "unit", "category", "zone", "expires_at"].map((k) => [k, fd.get(k)]));
 
 function done(): never {
   revalidatePath("/fridge");

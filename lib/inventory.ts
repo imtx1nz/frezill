@@ -20,6 +20,8 @@ export const lotSchema = z.object({
   unit: z.string().trim().min(1).max(20),
   category: z.enum(Object.keys(CATEGORIES) as [keyof typeof CATEGORIES]),
   zone: z.enum(["chill", "freezer"]),
+  // "" from an empty <input type="date"> = no expiry date
+  expires_at: z.preprocess((v) => v || null, z.iso.date().nullable()),
 });
 
 export type FefoLot = { id: string; qty: number; expires_at: string | null; created_at: string };
