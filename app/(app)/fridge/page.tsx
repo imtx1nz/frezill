@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { Plus, Refrigerator } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { CATEGORIES, ZONES } from "@/lib/inventory";
+import { todayIn } from "@/lib/expiry";
+import { ExpiryBadge } from "@/components/inventory/ExpiryBadge";
 import { PageHeader } from "@/components/inventory/PageHeader";
 import { consume } from "./actions";
 
@@ -17,6 +19,7 @@ type Lot = {
   unit: string;
   category: keyof typeof CATEGORIES;
   zone: keyof typeof ZONES;
+  expires_at: string | null;
   created_at: string;
 };
 
@@ -32,12 +35,17 @@ export default async function FridgePage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data } = await supabase
-    .from("lots")
-    .select("id, fridge_id, name, qty, unit, category, zone, created_at")
-    .gt("qty", 0)
-    .order("name")
-    .order("created_at");
+  const [{ data }, { data: home }] = await Promise.all([
+    supabase
+      .from("lots")
+      .select("id, fridge_id, name, qty, unit, category, zone, expires_at, created_at")
+      .gt("qty", 0)
+      .order("name")
+      .order("expires_at", { nullsFirst: false }) // FEFO order inside each item
+      .order("created_at"),
+    supabase.from("households").select("timezone").limit(1).maybeSingle(),
+  ]);
+  const today = todayIn(home?.timezone);
 
   // Same name + unit = one item with several lots.
   const groups = new Map<string, Lot[]>();
@@ -99,8 +107,10 @@ export default async function FridgePage() {
                       href={`/item/${l.id}`}
                       className="flex min-h-11 items-center justify-between gap-3 text-[0.9375rem] text-ink-2 hover:text-ink"
                     >
-                      <span>ล็อต {day(l.created_at)}</span>
-                      <span>
+                      <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        ล็อต {day(l.created_at)} <ExpiryBadge expiresAt={l.expires_at} today={today} />
+                      </span>
+                      <span className="shrink-0">
                         {fmt(l.qty)} {l.unit} · แก้ไข ›
                       </span>
                     </Link>
