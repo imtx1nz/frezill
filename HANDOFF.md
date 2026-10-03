@@ -6,6 +6,7 @@
 - ✅ M0: Next.js 16 + Tailwind 4 + Supabase client + Vitest, deploy แล้วที่ https://frezill.vercel.app (Vercel project `frezill`)
 - ✅ M1 (ส่วนพื้นฐาน) ใช้งานได้จริงบน production (ผู้ใช้ล็อกอินด้วย Google ผ่านเมื่อ 2026-10-04): สมัครและล็อกอิน (อีเมล + Google), ลืมรหัสและตั้งรหัสใหม่, ออกจากระบบ, proxy กันหน้าที่ต้องล็อกอิน, trigger สร้างบ้านและตู้ให้อัตโนมัติ, RLS
 - ⏸ ระบบเชิญ/บทบาท/หลายบ้าน: **พักไว้ที่ branch `m1-invites`** (ผู้ใช้เลือกทำแค่พื้นฐาน) ถ้าจะใช้ต้องรัน migration 0002 ใน branch นั้นก่อน
+- 🚧 M2 กำลังทำที่ branch `m2-lots`: ✅ เขียน `supabase/migrations/0002_lots.sql` แล้ว (ยังไม่ได้รัน) · ✅ `lib/inventory.ts` (FEFO) + เทสผ่าน · ⏳ CRUD UI
 - ➡️ ถัดไป: **Session 1 = M2** (ดูตารางใน skill) เปิด session ใหม่ทุกครั้งที่ขึ้น M ใหม่
 - 📊 ของจริง M0+M1 (session เดียว, Opus 5.5, ไม่มี subagent): ประมาณ 32M token (98% เป็น cache read), ทำงานจริงประมาณ 3 ชม. 20 นาที
 - ⚙️ 2026-10-04: เปลี่ยน skill เป็น ponytail ระดับ ultra, ไม่โหลด impeccable, อัปเดต HANDOFF ทุกครั้งที่งานย่อยเสร็จ
