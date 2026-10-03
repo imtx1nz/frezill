@@ -8,7 +8,7 @@
 - ⏸ ระบบเชิญ/บทบาท/หลายบ้าน: **พักไว้ที่ branch `m1-invites`** (ผู้ใช้เลือกทำแค่พื้นฐาน) ถ้าจะใช้ต้องรัน migration 0002 ใน branch นั้นก่อน
 - 🟡 M2 โค้ดเสร็จแล้วที่ branch **`m2-lots`** (ยังไม่ merge, ยังไม่ deploy เพราะต้องรัน migration 0002 ก่อน ไม่งั้น production พัง): ✅ migration `0002_lots.sql` · ✅ FEFO + เทส · ✅ หน้า /fridge, /fridge/add, /item/[id] · ✅ test/tsc/lint/build ผ่าน
 - 🟡 M3+M4 โค้ดเสร็จแล้วที่ branch **`m3-expiry`** (แตกจาก `m2-lots` จึงมีงาน M2 ครบ, push แล้ว, ยังไม่ merge/deploy): ✅ `lib/expiry.ts` + เทส · ✅ ช่องวันหมดอายุ · ✅ หน้า today = สรุปรายวัน + แถบเตือน · ✅ เตือน "ยังมี…อยู่ในตู้" ตอนเพิ่มของ · ✅ test 33 เทส / tsc / lint / build ผ่าน
-- ➡️ ถัดไป: ทำขั้นด้านล่าง (M2+M3+M4 ขึ้น production พร้อมกัน) แล้วเปิด session ใหม่ทำ **M5**
+- ➡️ ถัดไป: ทำขั้นด้านล่าง (M2+M3+M4 ขึ้น production พร้อมกัน) แล้วเปิด session ใหม่ทำ **M5** · **M5 ต้องมี `GEMINI_API_KEY` ก่อน** (สร้างที่ https://aistudio.google.com/apikey แล้วใส่ใน `.env.local` และ Vercel env)
 
 ## เช้านี้ทำ (M2 + M3+M4 ในรอบเดียว)
 1. [ ] เปิด Supabase → SQL Editor → วางเนื้อหาทั้งไฟล์ `supabase/migrations/0002_lots.sql` → Run (รันซ้ำได้ ไม่พัง) · **M3 ไม่มี 0003** (คอลัมน์ `expires_at`, `expiry_guessed` อยู่ใน 0002 แล้ว)
