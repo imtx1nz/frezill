@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LogOut, Refrigerator } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
@@ -51,17 +52,20 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
 
       {reset && <Notice tone="success">ตั้งรหัสผ่านใหม่เรียบร้อยแล้ว</Notice>}
 
-      <section className="rounded-2xl bg-surface p-5 shadow-[0_10px_30px_-18px_rgb(4_40_30/0.35)]">
+      <Link
+        href="/fridge"
+        className="rounded-2xl bg-surface p-5 shadow-[0_10px_30px_-18px_rgb(4_40_30/0.35)] hover:shadow-[0_12px_32px_-16px_rgb(4_40_30/0.45)]"
+      >
         <div className="flex items-center gap-3">
           <span className="grid size-11 place-items-center rounded-xl bg-brand-soft text-brand">
             <Refrigerator className="size-6" />
           </span>
           <div>
             <p className="font-semibold">{household?.fridges?.[0]?.name ?? "ตู้เย็น"}</p>
-            <p className="text-[0.9375rem] text-ink-2">ยังว่างอยู่ — ระบบเพิ่มวัตถุดิบกำลังมาใน milestone ถัดไป</p>
+            <p className="text-[0.9375rem] text-ink-2">ดูของในตู้ เพิ่ม ลด หรือแก้ไข ›</p>
           </div>
         </div>
-      </section>
+      </Link>
     </main>
   );
 }
