@@ -5,7 +5,10 @@
 ## สถานะ
 - ✅ M0: Next.js 16 + Tailwind 4 + Supabase client + Vitest, deploy แล้วที่ https://frezill.vercel.app (Vercel project `frezill`)
 - ✅ M1 ใช้งานได้จริงบน production (ผู้ใช้ล็อกอินด้วย Google ผ่านเมื่อ 2026-10-04): สมัครและล็อกอิน (อีเมล + Google), ลืมรหัสและตั้งรหัสใหม่, ออกจากระบบ, proxy กันหน้าที่ต้องล็อกอิน, trigger สร้างบ้านและตู้ให้อัตโนมัติ, RLS
-- ⏳ M1 ที่ยังเหลือ: เชิญสมาชิกด้วยลิงก์หรือรหัส (`/join/[code]`) + เทสว่า RLS กันข้ามบ้านได้จริง
+- 🔨 M1 ส่วนเชิญสมาชิก **(หยุดไว้กลางทาง 2026-10-04, ยังไม่ได้ commit, ยังไม่ได้ deploy)**
+  - เขียนแล้ว: `supabase/migrations/0002_invites_roles.sql` (ผู้ใช้ยังไม่ได้รันใน Supabase), `lib/household.ts`, `app/(app)/household/*`, `components/household/HouseholdPanel.tsx`, `app/join/[code]/*`, ส่ง `?next` ผ่านหน้า signup/login, proxy เปิด `/join` และเคารพ `?next`, หน้า today ใหม่
+  - tsc ผ่านแล้ว
+  - ที่ยังเหลือ: lint + test → ให้ผู้ใช้รัน 0002 ใน SQL Editor → เขียน SQL ทดสอบ RLS (ใช้ 2 user ปลอมใน transaction แล้ว rollback) → กดทดสอบทุกปุ่มบน prod → commit + deploy
 
 ## ไฟล์สำคัญ
 - `proxy.ts` + `lib/supabase/proxy.ts`: refresh session, คนที่ยังไม่ล็อกอินถูกส่งไป /login, คนที่ล็อกอินแล้วเข้า /login หรือ /signup จะถูกส่งไป /today

@@ -36,7 +36,7 @@ export async function signUp(_prev: FormState, fd: FormData): Promise<FormState>
     password: parsed.data.password,
     options: {
       data: { display_name: parsed.data.displayName },
-      emailRedirectTo: `${await siteOrigin()}/auth/callback?next=/today`,
+      emailRedirectTo: `${await siteOrigin()}/auth/callback?next=${encodeURIComponent(safeNext(text(fd, "next")))}`,
     },
   });
   if (error) return { error: authErrorMessage(error), values };
@@ -45,7 +45,7 @@ export async function signUp(_prev: FormState, fd: FormData): Promise<FormState>
   if (data.user && data.user.identities?.length === 0) {
     return { error: authErrorMessage({ code: "user_already_exists" }), values };
   }
-  if (data.session) redirect("/today");
+  if (data.session) redirect(safeNext(text(fd, "next")));
 
   return {
     success: `ส่งลิงก์ยืนยันไปที่ ${parsed.data.email} แล้ว เปิดอีเมลแล้วกดลิงก์เพื่อเริ่มใช้งาน`,

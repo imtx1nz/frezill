@@ -32,7 +32,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
       <LoginForm next={next} linkError={linkError} />
       <p className="text-center text-ink-2">
         ยังไม่มีบัญชี?{" "}
-        <Link href="/signup" className="font-semibold text-brand underline-offset-4 hover:underline">
+        <Link href={next ? `/signup?next=${encodeURIComponent(next)}` : "/signup"} className="font-semibold text-brand underline-offset-4 hover:underline">
           สมัครฟรี
         </Link>
       </p>
