@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { GoogleButton, OrDivider } from "@/components/auth/GoogleButton";
+import { enabledProviders } from "@/lib/auth/providers";
 import { safeNext } from "@/lib/auth/redirect";
 import { LoginForm } from "./LoginForm";
 
@@ -12,7 +13,7 @@ const LINK_ERRORS: Record<string, string> = {
 };
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
-  const sp = await searchParams;
+  const [sp, { google }] = await Promise.all([searchParams, enabledProviders()]);
   const next = typeof sp.next === "string" ? safeNext(sp.next) : undefined;
   const linkError = typeof sp.error === "string" ? LINK_ERRORS[sp.error] : undefined;
 
@@ -22,8 +23,12 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
         <h1 className="text-[1.875rem] font-bold leading-tight tracking-[-0.02em]">ยินดีต้อนรับกลับ</h1>
         <p className="mt-1.5 text-ink-2">เข้าสู่ระบบเพื่อดูว่าวันนี้ในตู้มีอะไรต้องใช้ก่อน</p>
       </header>
-      <GoogleButton next={next} label="เข้าสู่ระบบด้วย Google" />
-      <OrDivider />
+      {google && (
+        <>
+          <GoogleButton next={next} label="เข้าสู่ระบบด้วย Google" />
+          <OrDivider />
+        </>
+      )}
       <LoginForm next={next} linkError={linkError} />
       <p className="text-center text-ink-2">
         ยังไม่มีบัญชี?{" "}

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { authErrorMessage } from "@/lib/auth/errors";
 import { safeNext } from "@/lib/auth/redirect";
+import { enabledProviders } from "@/lib/auth/providers";
 import {
   forgotPasswordSchema,
   resetPasswordSchema,
@@ -65,6 +66,7 @@ export async function signIn(_prev: FormState, fd: FormData): Promise<FormState>
 }
 
 export async function signInWithGoogle(fd: FormData) {
+  if (!(await enabledProviders()).google) redirect("/login?error=oauth");
   const supabase = await createClient();
   const next = safeNext(text(fd, "next"));
   const { data, error } = await supabase.auth.signInWithOAuth({
