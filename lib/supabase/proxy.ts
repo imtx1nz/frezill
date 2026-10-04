@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/", "/login", "/signup", "/forgot-password", "/auth"];
+const PUBLIC_PATHS = ["/", "/login", "/signup", "/forgot-password", "/auth", "/api/cron"]; // cron checks its own secret
 const AUTH_ONLY_PATHS = ["/login", "/signup"];
 
 const matches = (path: string, list: string[]) =>

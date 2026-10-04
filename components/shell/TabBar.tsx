@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChefHat, History, LogOut, Refrigerator } from "lucide-react";
+import { ChefHat, History, Refrigerator } from "lucide-react";
 import { LogoMark } from "@/components/auth/Logo";
+import { Menu } from "./Menu";
 
 const TABS = [
   { href: "/today", label: "ตู้เย็น", Icon: Refrigerator, match: ["/today", "/fridge", "/item"] },
@@ -12,7 +13,7 @@ const TABS = [
 ];
 
 /** 3-tab shell: navy glass bar at the bottom on phones, a transparent top bar on desktop. */
-export function TabBar({ ai, signOut }: { ai: boolean; signOut: () => Promise<void> }) {
+export function TabBar({ ai, name, household }: { ai: boolean; name: string; household: string }) {
   const path = usePathname();
   const tabs = TABS.filter((t) => ai || t.href !== "/recipes"); // no dead buttons without a key
   const active = (m: string[]) => m.some((p) => path === p || path.startsWith(`${p}/`));
@@ -40,11 +41,7 @@ export function TabBar({ ai, signOut }: { ai: boolean; signOut: () => Promise<vo
             );
           })}
         </nav>
-        <form action={signOut}>
-          <button type="submit" className="chip">
-            <LogOut className="size-4.5" strokeWidth={2.5} aria-hidden="true" /> ออกจากระบบ
-          </button>
-        </form>
+        <Menu name={name} household={household} />
       </header>
 
       {/* phone tab bar */}
