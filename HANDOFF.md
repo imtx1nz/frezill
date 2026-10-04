@@ -1,146 +1,58 @@
-# HANDOFF — frezill
+# Handoff — frezill (2026-10-04)
 
-**อัปเดต:** 2026-10-04 (UI Fridge Home อยู่ที่ branch `ui-fridge-home`) · กฎการพัฒนาอยู่ที่ `.claude/skills/frezill-dev/SKILL.md`
+## เป้าหมาย
+เว็บแอป (PWA) ตู้เย็นที่คนในบ้านใช้ร่วมกัน เตือนก่อนของหมดอายุ และ AI เสนอเมนูจากของในตู้ · กฎการพัฒนา: `.claude/skills/frezill-dev/SKILL.md` · สเปก UI: `docs/design/fridge-home.md` · แผนเต็ม: `PROJECT_PLAN.md`
 
-## สถานะ
-- ✅ M0: Next.js 16 + Tailwind 4 + Supabase client + Vitest, deploy แล้วที่ https://frezill.vercel.app (Vercel project `frezill`)
-- ✅ M1 (ส่วนพื้นฐาน) ใช้งานได้จริงบน production (ผู้ใช้ล็อกอินด้วย Google ผ่านเมื่อ 2026-10-04): สมัครและล็อกอิน (อีเมล + Google), ลืมรหัสและตั้งรหัสใหม่, ออกจากระบบ, proxy กันหน้าที่ต้องล็อกอิน, trigger สร้างบ้านและตู้ให้อัตโนมัติ, RLS
-- ⏸ ระบบเชิญ/บทบาท/หลายบ้าน: **พักไว้ที่ branch `m1-invites`** (ผู้ใช้เลือกทำแค่พื้นฐาน) ถ้าจะใช้ต้องรัน migration 0002 ใน branch นั้นก่อน
-- ✅ M2 + M3+M4 ขึ้น production แล้ว (2026-10-04): migration 0002 รันบน Supabase แล้ว (ตรวจแล้ว: `lots` RLS 4 policy, `usage_logs` 2 policy), merge เข้า main (`8a0e488`), deploy แล้ว · curl เช็กแล้ว: /today /fridge /fridge/add /item/[id] redirect ไป login, /login 200
-  - ⚠️ **ยังไม่ได้กดทดสอบตอนล็อกอิน** → ผู้ใช้ต้องกดตามรายการ "กดเช็กบน…" ด้านล่าง
-  - เวลา: M2 agent ~6 นาที, M3+M4 agent ~5 นาที (agent รายงาน ~77k และ ~75k token ไม่รวม cache read)
-- ✅ QA อัตโนมัติบน production (2026-10-04, Playwright + บัญชีทดสอบ `frezill.qa.*@gmail.com`): login, เพิ่ม, เตือนซ้ำ, FEFO (ตรวจใน DB แล้ว), แถบเตือน, เรียงวัน, แก้วัน, ทิ้ง, ลบ ผ่านหมด
-  - 🐞 พบ: กดปุ่ม −1/ใช้ครึ่งหนึ่ง/หมดแล้ว แล้วหน้าจอเปลี่ยนช้า 4–5 วินาที และปุ่มไม่ล็อก (กดซ้ำ = ตัดซ้ำ) เพราะ function รันที่ iad1 แต่ DB อยู่โซล
-  - ✅ แก้แล้วและขึ้น production (`04fe406`): `vercel.json` regions `icn1` + `PendingButton` ล็อกปุ่มระหว่างบันทึก · วัดซ้ำ: ปุ่มอัปเดตใน 1.1–1.8 วินาที (เดิม 3.9–4.8)
-- ✅ M5 ขึ้น production แล้ว (2026-10-04, `89ee7ee`): 0003 `recipe_requests` รันแล้ว · Tester (Playwright + บัญชี QA) ผ่านครบ: ได้ 3 เมนูใน 6.7–8.5 วิ, ใช้ของใกล้หมดก่อน, มีคำเตือน AI ทุกการ์ด, "ทำเมนูนี้แล้ว" ตัดของถูก (DB usage_logs ตรง), ครั้งที่ 11 ถูกปฏิเสธ, ไม่มี error/5xx
-  - Gemini: `gemini-3.8-flash` → สำรอง `gemini-flash-latest`, `gemini-3-flash-preview` · ปิด thinking (`thinkingLevel: minimal`) เพราะทำให้ช้า ~21 วิ · key ต้องมาจาก project ของ Gmail ส่วนตัว (project จากบัญชีโรงเรียนโดน 403 "denied access")
-  - เล็กน้อย: ขอครั้งที่ 11 แล้วการ์ดเมนูเดิมหายไป (เมนูไม่ได้บันทึก) · FEFO ข้ามหลายล็อตในเมนูยังไม่ได้ทดสอบจริง · ภาพ desktop ตอนมีเมนูยังไม่ได้ดู · บัญชี QA ใช้โควตาวันนี้ครบ 10 แล้ว
-- 🚧 branch `bought-on` (ยังไม่ merge/deploy): เพิ่ม "วันที่ซื้อ" (`lots.bought_on`, เว้นว่าง = วันนี้ตามเวลาไทย, ห้ามอนาคต) แสดงที่ /fridge เป็น "ซื้อ <วัน>" และใช้ตัดสิน FEFO เมื่อวันหมดอายุเท่ากัน · **ต้องรัน 0004 ก่อน deploy เสมอ** (โค้ดใหม่ select คอลัมน์ `bought_on`) · ผู้ใช้รันตามลำดับ:
-  1. `npx supabase db query --linked --project-ref wlprvlbdohsjjljrggpk -f supabase/migrations/0004_lots_bought_on.sql`
-  2. `git checkout main && git merge --ff-only bought-on && git push`
-  3. `npx vercel deploy --prod`
-  - ⚠️ branch `m1-invites` มี 0002 ของตัวเอง ต้อง renumber ก่อนใช้
-- ✅ วันที่ซื้อ (`lots.bought_on`, 0004 รันแล้ว, `19ec0db`): ไม่กรอก = วันนี้ (เวลาไทย), อนาคตไม่ได้, FEFO ถ้าวันหมดเท่ากัน/ไม่มี ตัดล็อตที่ซื้อก่อน · Tester ผ่านครบบน production · เล็กน้อย: ถ้าวันอนาคตหลุดถึง server จะขึ้น error กลาง ๆ ไม่ใช่ข้อความเฉพาะ
-- ✅ แก้บั๊ก AI "หมูสับ 100 กิโลกรัม" (`074c7e2`): `fitQty` แปลง กรัม↔กก. / มล.↔ลิตร และจำกัดไม่เกินของในตู้ (หน่วยแปลงไม่ได้ = 1) · เทส 49 ผ่าน · ยังไม่ได้ลองกับ Gemini จริงบน production (บัญชี QA โควตาวันนี้หมด)
-- ✅ โควตา Gemini (`939634e`): free tier = **20 ครั้ง/วัน/โมเดล/project** (`gemini-flash-latest` ใช้โควตาเดียวกับ 3.8) · ลำดับโมเดล: env → `gemini-3.8-flash` → `gemini-flash-lite-latest` → `gemini-3.1-flash-lite-preview` → `gemini-3-flash-preview` (ห้าม `gemini-2.5-flash-lite` = 404) · 429 ข้ามทันที, 5xx backoff · โควตาหมดทุกตัว → "วันนี้ AI ใช้ครบโควตาแล้ว ลองใหม่พรุ่งนี้" · บันทึก `recipe_requests` เฉพาะเมื่อสำเร็จ · ถ้าผู้ใช้หลายบ้าน ควรเปิด billing ใน AI Studio
-- ➡️ ถัดไป: ขอบเขต "ทำตอนนี้" เหลือ **แจ้งเตือน web push** (ยังไม่มีแถวในตาราง milestone) ถามผู้ใช้ก่อนว่าจะทำเป็น M6 ไหม
-- 🔧 QA ใช้บัญชี `frezill.qa.*` ได้ (สคริปต์ Playwright เดิมหาย ให้เขียนใหม่ด้วย playwright-core + chromium ใน `~/.cache/ms-playwright`)
-- 🔧 Supabase CLI ล็อกอินแล้ว: รัน migration ได้ด้วย `npx supabase db query --linked --project-ref wlprvlbdohsjjljrggpk -f <file>` (agent โดนบล็อกตอนแก้ production ต้องให้ผู้ใช้รันเองผ่าน `!`)
+## สถานะตอนนี้ (live: https://frezill.vercel.app, main = `68ff6ca`)
+- ✅ M0–M5 ขึ้น production และทดสอบด้วย Playwright + บัญชี QA แล้ว: auth (อีเมล+Google), เพิ่ม/ลด/แก้/ทิ้ง/ลบของ, FEFO, วันหมดอายุ+สถานะ, วันที่ซื้อ (`bought_on`, ว่าง = วันนี้), AI เมนู 3 อย่าง + "ทำเมนูนี้แล้ว" + จำกัด 10 ครั้ง/บ้าน/วัน
+- ✅ UI ใหม่ "Fridge Home" (แนวเกม Cookie Run + แถบข้างแบบ Tinkercad + glass) ขึ้น production แล้ว (`eac617b`): แท็บ 3 อัน ตู้เย็น/ประวัติ/AI, ตู้ 2.5D มีของจริงบนชั้น, แถบวัตถุดิบ 30 อย่าง (มือถือ = bottom sheet), การ์ดรายละเอียด (hover/แตะ), ลากเข้าตู้ (มือถือกดค้าง) → ฟอร์มสั้นมีชิปวันหมดอายุ + "− n +", แมลงวันบนของ ≤3 วัน/หมดอายุ (ไม่เกิน 6 ตัว), หน้า `/history`, `/recipes` แต่งใหม่
+  - ผ่าน Reviewer 1 รอบ + แก้ครบ P1–P3 + 5 ท่าจาก Glovo (ป้ายวันซ้ายบน/จำนวนขวาล่าง, ชื่อใต้ช่อง, แถวตัวเลขบนหัว, − n +, ชิปวันหมดอายุ)
+  - ⏳ **Tester กำลังทดสอบบน production ตอนเขียนไฟล์นี้** (FPS มือถือ CPU ×4, ลาก/แตะ/hover, ประวัติ) — ผลยังไม่เข้า ถ้า session ใหม่ไม่เห็นผล ให้รัน Tester ซ้ำ
+- ✅ AI: คิดเมนูจาก**ของอะไรก็ได้ในตู้** (ของใกล้หมดเป็นโบนัส ไม่บังคับ) · โมเดลสำรองเมื่อโควตาหมด
+- ✅ ตารางอายุเก็บใน `lib/catalog.ts` ใช้ค่าฝั่งปลอดภัยจากตารางที่ผู้ใช้ให้ (หมูสับ 1 วัน, หมูชิ้น 3, ผักใบ 3, กะหล่ำ/แครอท 7, พริก/มะนาว 14, ไข่ 21 ไม่แช่แข็ง)
 
-- 🚧 branch `ui-fridge-home` (push แล้ว, **ยังไม่ merge/deploy**, ไม่มี migration ใหม่): หน้าแรกใหม่ตาม `docs/design/fridge-home.md`
-  - ส่งแล้ว: แท็บ 3 อัน (ตู้เย็น / ประวัติ / เมนู AI; ไม่มี key = ซ่อนแท็บ AI) · ตู้เย็นแบบเกม วางของจริงตามโซน+หมวด · แถบวัตถุดิบ 30 อย่าง (เลือกหมวด + ค้นหา + ปุ่มพับบน desktop, bottom sheet บนมือถือ) พื้นหลังเป็น **glass** (navy โปร่ง blur 12px, เครื่องไม่รองรับ = navy ทึบ) ใช้ทั้งแถบวัตถุดิบและแถบแท็บ · การ์ดรายละเอียด (hover บน desktop, แตะบนมือถือ, Enter บนคีย์บอร์ด) · ลากของเข้าตู้ (เมาส์ลากเลย, มือถือกดค้าง 350ms) → ฟอร์มสั้น เดาวันหมดอายุจากอายุเก็บ (`expiry_guessed`) วันที่ซื้อ = วันนี้ → `addLotFromHome` · ปุ่ม "+" บนแต่ละช่อง = ทางเลือกไม่ต้องลาก · แมลงวัน (≤3 วัน/หมดอายุ, รวมไม่เกิน 6 ตัว, หยุดตอนลาก/เปิดฟอร์ม, reduced-motion = ตัวนิ่ง) · หน้า `/history` (จาก lots + usage_logs แยกตามวัน, กรอง, ดูเก่ากว่านี้) · `/recipes` แต่งใหม่ (logic เดิม) · /fridge มีรูป + ปุ่มออกจากระบบ (มือถือ)
-  - **รูปวัตถุดิบ:** ทุกที่ใช้ `components/IngredientPicture.tsx` ลำดับ `public/ingredients/<id>.svg` → `<id>.png` → `cat-<หมวด>.svg|png` → สติกเกอร์ตัวหนังสือ (ตอนนี้ยังไม่มีไฟล์รูป = สติกเกอร์ทั้งหมด) · ไม่ยิง 404: `scripts/ingredients-manifest.mjs` (รันเองตอน `npm run dev`/`npm run build`) เขียนรายชื่อไฟล์ที่มีจริงลง `lib/ingredients-manifest.json`
-  - **เพิ่มรูป:** วางไฟล์ 512×512 พื้นใส ชื่อ = id ในตาราง `lib/catalog.ts` (เช่น `egg.svg`, `pork-minced.png`) หรือ `cat-veg.svg` ฯลฯ ลงใน `public/ingredients/` → `npm run dev` หรือ `node scripts/ingredients-manifest.mjs` (manifest จะมี id นั้น) → commit ทั้งรูปและ manifest → deploy ไม่ต้องแก้โค้ด (คู่มือวาด: spec §4.5)
-  - เช็กแล้ว: test/tsc/lint/build ผ่าน, ลองบน `npm run dev` + บัญชี QA: hover/แตะการ์ด, ลากด้วยเมาส์และนิ้ว (CDP touch) → บันทึกจริง, "+", พับแถบ, ขยาย sheet · ยังไม่ได้: ลองบนมือถือจริง, trace FPS, `impeccable detect`, กดบน production
-  - ที่เบี่ยงจาก spec: ใช้ glass (ผู้ใช้สั่ง) · รวมของเป็นชิ้นเดียวด้วย ชื่อ+หน่วย+โซน (ไม่ใช่แค่ชื่อ+หน่วย) · ป้ายสติกเกอร์ใช้ `short` เฉพาะชื่อที่ตรงเป๊ะ · จับคู่ชื่อแบบ "มีคำนี้อยู่" ต้องตรงขอบคำไทย (กัน "นม" ใน "ขนมปัง") · ชื่อหมวดใช้ของเดิมใน `lib/inventory.ts` · ตู้ desktop กว้าง 440px (สเปก 520 ไม่พอที่ 1280)
-  - รู้แล้วว่าเล็กน้อย: แก้ล็อตที่หน้า /item แล้ว `expiry_guessed` จะกลายเป็น false · คนที่ role viewer ยังเห็นปุ่มใน /fridge (เหมือนเดิม)
+## ถัดไป
+1. ดูผล Tester → ถ้ามีบั๊ก ส่ง Builder แก้ → ผู้ใช้ deploy
+2. ผู้ใช้วาดรูปวัตถุดิบ 39 รูป (30 ชิ้น + 9 หมวด) ตามรายการ id ใน `lib/catalog.ts` → วางใน `public/ingredients/<id>.svg|png` (512×512 พื้นใส) → `node scripts/ingredients-manifest.mjs` → commit รูป+`lib/ingredients-manifest.json` → deploy (ไม่ต้องแก้โค้ด; ยังไม่มีรูป = สติกเกอร์ตัวหนังสือ) · คู่มือวาด: สเปก §4.5
+3. แจ้งเตือน web push (ขอบเขต "ทำตอนนี้" ข้อสุดท้าย ยังไม่มีแถว milestone) — ถามผู้ใช้ก่อน
+4. เมื่อมีผู้ใช้หลายบ้าน: เปิด billing ใน Google AI Studio (free tier 20 ครั้ง/วัน/โมเดล/project)
 
-## ขั้นขึ้น production M5 (ทำเสร็จแล้ว)
-0. [ ] ทำให้ Gemini key ใช้ได้ก่อน (ดู ⛔ ด้านบน) คำสั่งเช็กต้องได้ `200` · ถ้าจะใช้รุ่นอื่นไม่ต้องแก้โค้ด ตั้ง env `GEMINI_MODEL` (ค่าเริ่มต้น `gemini-3.8-flash`)
-1. [ ] รัน migration 0003 (ตาราง `recipe_requests` + RLS, รันซ้ำได้): `npx supabase db query --linked --project-ref wlprvlbdohsjjljrggpk -f supabase/migrations/0003_recipe_requests.sql`
-   - เช็ก: `npx supabase db query --linked --project-ref wlprvlbdohsjjljrggpk "select policyname from pg_policies where tablename='recipe_requests'"` ต้องได้ 2 แถว
-   - หมายเหตุ: branch `m1-invites` มี `0002_*` ของตัวเอง ถ้าจะ merge ทีหลังให้เปลี่ยนเลขเป็น `0004_*`
-2. [ ] `git checkout main && git merge --ff-only m5-recipes && git push`
-3. [ ] `npx vercel deploy --prod`
-
-**กดเช็ก M5 บน https://frezill.vercel.app** (ล็อกอินก่อน)
-- หน้า today มีการ์ด "เมนูแนะนำจาก AI" (ถ้าไม่มี key การ์ดหายและ /recipes เป็น 404)
-- ตู้มีของอย่างน้อย 3–4 อย่าง ให้ 1 อย่างหมดพรุ่งนี้ (เช่น ไข่ไก่ 4 ฟอง) และ 1 อย่างหมดอายุแล้ว
-- กดการ์ด → "ขอเมนูจากของในตู้" → ปุ่มหมุนระหว่างรอ (~5–15 วินาที) → ได้ **3 การ์ด** แต่ละการ์ดมีชื่อ, เวลา·ความยาก, ป้ายเหลือง "ใช้ของใกล้หมด: ไข่ไก่", วัตถุดิบ (ในตู้/ของในครัว), "ต้องซื้อเพิ่ม" (ถ้ามี), ขั้นตอน และกล่อง "เมนูนี้แนะนำโดย AI โปรดตรวจสภาพวัตถุดิบก่อนปรุง"
-- ของที่หมดอายุแล้วต้องไม่โผล่เป็น "ในตู้" · ข้อความ "วันนี้ขอได้อีก N ครั้ง" ลดลงทีละ 1
-- กด "ทำเมนูนี้แล้ว" → ขึ้นช่องจำนวนของแต่ละอย่าง → แก้ตัวเลข 1 ช่อง → "ยืนยัน ตัดของออกจากตู้" → ไปหน้าตู้เย็น จำนวนลดลงตามที่ใส่ (ล็อตหมดก่อนถูกตัดก่อน)
-- กด "ขอเมนูใหม่" จนครบ 10 ครั้ง/วัน → ขึ้น "วันนี้บ้านนี้ขอเมนูครบ 10 ครั้งแล้ว" (เช็กง่ายกว่า: `select count(*) from recipe_requests` แล้ว insert แถวทดสอบ)
-- เช็กบนมือถือ: การ์ดไม่ล้นจอ, ช่องตัวเลขเปิดแป้นตัวเลข
-
-**การตัดสินใจ M5 (agent ตัดสินเอง)**
-- `lib/ai/recipes.ts`: Zod `aiOutputSchema` (3 เมนู, missing ≤ 2, difficulty ง่าย/ปานกลาง/ยาก, minutes เป็นจำนวนเต็ม) = ด่านจริง · `responseSchema` แบบ Gemini เขียนมือ (ไม่ใช้ `z.toJSONSchema` เพราะ Gemini รับ keyword ไม่ครบ) · ไม่ผ่าน → ลองใหม่ 1 ครั้ง → "AI ไม่ว่าง ลองใหม่อีกครั้ง"
-- เปลี่ยนรุ่นจาก `gemini-2.5-flash` เป็น `gemini-3.8-flash` เพราะ 2.5 ปิดรับ key ใหม่แล้ว (ตาม error ของ Google) ตั้งทับได้ด้วย env `GEMINI_MODEL`
-- ingredient มี `unit` เพิ่มจากสเปก (ต้องใช้ตอนตัดของ) · ชื่อต้องตรงกับในตู้ทุกตัวอักษร ไม่งั้นย้ายไป `missing` (`normalize()`) · pantry = รายการคงที่ 11 อย่าง (ข้าว น้ำปลา น้ำมัน ฯลฯ) ใช้ได้แต่ไม่ถูกตัด · ไม่ได้ตัด missing ให้เหลือ 2 หลัง normalize (โชว์ครบดีกว่าซ่อน)
-- ส่งให้ AI เฉพาะ ชื่อ+จำนวน+หน่วย+ป้าย urgent ของที่ยังไม่หมดอายุ · ไม่ได้ส่ง `diet_prefs` เพราะยังไม่มี UI ให้ตั้ง (`buildPrompt` รับ `diet` ไว้แล้ว)
-- rate limit: นับ `recipe_requests` ของบ้านตั้งแต่เที่ยงคืนตาม `households.timezone` (`dayStartIn()` มีเทส) · บันทึกก่อนเรียก AI (เรียกพลาดก็นับ) · RLS ห้าม update/delete จึงลบเพื่อรีเซ็ตเองไม่ได้
-- "ทำเมนูนี้แล้ว" = `<details>` เปิดฟอร์มยืนยันจำนวน (ไม่มี JS เพิ่ม) → `cookMenu` ใน `fridge/actions.ts` ใช้ `deduct()` ตัวเดียวกับ `consume` (FEFO + usage_logs) · ไม่ได้เก็บเมนูลง DB (กดออกจากหน้าแล้วเมนูหาย ต้องขอใหม่)
-- `/recipes` เป็น 404 และการ์ดในหน้า today ซ่อน ถ้าไม่มี `GEMINI_API_KEY`
-
-**ความเสี่ยง / ยังไม่ได้ทดสอบ (M5)**
-- **ยังไม่เคยได้คำตอบจริงจาก Gemini** (key โดน 403) prompt + `responseSchema` จึงยังไม่ได้พิสูจน์ ถ้า Gemini ไม่รับ schema จะได้ "AI ไม่ว่าง" เสมอ → ดู status ด้วยคำสั่งเช็ก key ด้านบนโดยใส่ body จริง
-- ยังไม่ได้กดจริงหลังล็อกอิน (migration 0003 ยังไม่รัน) · Vercel function timeout ถ้า Gemini ช้ามาก
-- การตัดหลายวัตถุดิบเขียนทีละแถว ไม่มี transaction (เหมือน M2)
-
-## ขั้นขึ้น production (ทำเสร็จแล้ว 2026-10-04)
-1. [x] เปิด Supabase → SQL Editor → วางเนื้อหาทั้งไฟล์ `supabase/migrations/0002_lots.sql` → Run (รันซ้ำได้ ไม่พัง) · **M3 ไม่มี 0003** (คอลัมน์ `expires_at`, `expiry_guessed` อยู่ใน 0002 แล้ว)
-2. [x] `git checkout main && git merge m3-expiry && git push` (merge `m3-expiry` อย่างเดียวพอ เพราะมี `m2-lots` อยู่ข้างในแล้ว)
-3. [x] `npx vercel deploy --prod`
-
-**กดเช็กบน https://frezill.vercel.app** (ล็อกอินก่อน)
-- หน้า today ตอนตู้ว่าง → ไม่มีแถบเตือน ไม่มีรายการสรุป · กดการ์ดตู้เย็น → หน้า "ของในตู้เย็น" (ว่าง มีข้อความชวนเพิ่ม)
-- กด "เพิ่ม" → ไข่ไก่ 4 ฟอง วันหมดอายุ = **พรุ่งนี้** → บันทึก → ล็อตมีป้ายเหลือง "หมดพรุ่งนี้"
-- กด "เพิ่ม" อีกครั้ง → พิมพ์ "ไข่" → มีชื่อ "ไข่ไก่" ให้เลือก → เลือกแล้วขึ้น "ยังมีไข่ไก่ 4 ฟอง หมด … อยู่ในตู้" → ใส่ 6 ฟอง วันหมดอายุอีก 10 วัน → บันทึก → รวม 10 ฟอง 2 ล็อต (ล็อตหมดพรุ่งนี้อยู่บน)
-- กด −1 → ล็อตหมดพรุ่งนี้เหลือ 3 (FEFO) · กด "ใช้ครึ่งหนึ่ง" → เหลือ 4.5 · กด "หมดแล้ว" → รายการหายไป
-- เพิ่ม นม 1 ขวด วันหมดอายุ = **เมื่อวาน**, ผัก 1 ถุง = **วันนี้**, ซอส 1 ขวด **ไม่ใส่วัน**
-- กลับหน้า today → แถบแดง "หมดอายุแล้ว 1 รายการ · หมดวันนี้ 1 รายการ" · รายการสรุปเรียง นม (แดง "หมดอายุแล้ว 1 วัน") → ผัก (ส้ม "หมดอายุวันนี้") → ซอส ("ไม่ระบุวันหมด") อยู่ท้าย · ทุกป้ายมีไอคอน+ข้อความ
-- กดรายการในสรุป → ไปหน้าแก้ไข → วันหมดอายุเดิมขึ้นในช่อง → เปลี่ยนวัน/ลบวัน → บันทึก → ป้ายเปลี่ยนตาม · ลองปุ่ม "ทิ้ง" และ "ลบรายการนี้"
-- เช็กบนมือถือ: ช่องวันที่เปิดปฏิทินของเครื่อง, ป้ายไม่ล้นจอ, แถบเตือนอ่านออก
-
-**การตัดสินใจ M3+M4 (agent ตัดสินเอง ผู้ใช้หลับอยู่)**
-- ไม่มี migration ใหม่ · ใช้ `expires_at` จาก 0002 · `expiry_guessed` ยังเป็น false เสมอ
-- **ยังไม่ทำการเดาวันหมดอายุ + `lib/catalog.ts`**: เกณฑ์ "เสร็จเมื่อ" ของ M3+M4 ไม่ได้บังคับ (ponytail ultra) วันหมดอายุเป็นช่องไม่บังคับ ถ้าไม่ใส่จะแสดง "ไม่ระบุวันหมด" และอยู่ท้ายรายการ · ถ้าจะทำทีหลัง: ตาราง หมวด×โซน → วัน แล้วเติมให้ตอนช่องว่าง + ตั้ง `expiry_guessed=true` + ป้าย "≈ เดา"
-- รายชื่อแนะนำตอนพิมพ์ชื่อ ใช้**ชื่อของที่มีอยู่ในตู้ตอนนี้**แทน catalog (ถูกกว่าและตรงกับบ้านจริง)
-- "วันนี้" คิดจาก `households.timezone` (ค่าเริ่มต้น Asia/Bangkok) ด้วย `Intl` ไม่ได้ลง `date-fns` (ไม่ต้องเพิ่ม dependency)
-- สถานะ: หมดแล้ว (<0, แดง) / วันนี้ (0, ส้ม) / ใกล้หมด 1–3 วัน (เหลือง) / ปลอดภัย (>3, เขียว) / ไม่ระบุ (เทา) · ตัวเลข 3 วันเป็นพารามิเตอร์ `soonDays` ใน `expiryStatus()` ยังไม่ได้แยกตามหมวด
-- หน้า today แสดง**ทุกล็อต**เรียงตามวันหมดอายุ (ไม่รวมกลุ่ม เพราะแต่ละล็อตหมดไม่พร้อมกัน) กดแล้วไปหน้าแก้ไขล็อตนั้น · แถบเตือนแดงถ้ามีของหมดแล้ว/หมดวันนี้ เหลืองถ้ามีแค่ใกล้หมด
-- หน้า /fridge: ล็อตในแต่ละรายการเรียงตามวันหมดอายุ (ลำดับ FEFO) และมีป้ายสถานะ
-- คำเตือน "ยังมี…" ขึ้นเมื่อชื่อตรงกันทุกตัวอักษร (ตัดช่องว่างหัวท้าย) แยกตามหน่วย บอกวันหมดที่เร็วที่สุด
-
-**ความเสี่ยง / ยังไม่ได้ทดสอบ (M3+M4)**
-- ยังไม่ได้กดจริงหลังล็อกอิน (ไม่มี session/migration) ตรวจแล้วด้วย: Vitest 33 เทส (รวมขอบวันที่ไทย 23:59/00:00, ข้ามเดือน/ปี, วันนี้/พรุ่งนี้/หมดแล้ว/ไม่มีวัน, ช่องวันที่ว่าง), tsc, lint, build, curl `next start` ว่า /today /fridge /fridge/add /item/[id] redirect ไป /login
-- ยังไม่ได้ดูหน้าจอจริง (ไม่ได้ถ่ายภาพ) ป้ายสถานะยาว ๆ บนจอแคบอาจตัดบรรทัด ใส่ `flex-wrap` ไว้แล้ว
-- `<input type="date">` บน iOS Safari แสดงแบบของเครื่อง ยังไม่ได้ลอง
-- branch `m1-invites` ก็มี `0002_...` ถ้าจะ merge ทีหลังต้องเปลี่ยนชื่อเป็น `0003_...`
-
-**การตัดสินใจ M2**
-- ของ = แถวใน `lots` ของชื่อ+หน่วยเดียวกันรวมเป็นรายการเดียวในหน้า /fridge และแสดงล็อตย่อยข้างใต้
-- ปุ่ม −1 / ใช้ครึ่งหนึ่ง / หมดแล้ว ทำงานกับทั้งรายการ ตัดแบบ FEFO (`lib/inventory.ts` → `fefo()`: หมดอายุก่อนตัดก่อน, ไม่มีวันหมดอายุไว้ท้าย, เสมอกันตัดล็อตเก่าก่อน) และเขียน `usage_logs` ทุกครั้ง
-- "ทิ้ง" (พร้อมเหตุผลไม่บังคับ) ทำทีละล็อตที่หน้าแก้ไข เพราะของเสียมักเป็นล็อตเดียว · "ลบ" = ลบแถวที่ใส่ผิด (log ของล็อตนั้นถูกลบตาม)
-- ล็อตที่ใช้หมดไม่ลบ แต่ตั้ง `qty = 0` และซ่อนจากรายการ เพื่อให้ `usage_logs` ยังผูกกับล็อตได้
-- ใส่คอลัมน์ `expires_at`, `expiry_guessed` ไว้ใน 0002 เลย (FEFO ต้องใช้) แต่ช่องกรอกวันหมดอายุทำใน M3 ตามแผน
-- หมวดหมู่ 9 หมวด (ผัก ผลไม้ เนื้อสัตว์ อาหารทะเล ไข่และนม เครื่องดื่ม เครื่องปรุง อาหารปรุงสุก อื่น ๆ) เป็น check constraint · โซน ช่องธรรมดา/ช่องแช่แข็ง · หน่วยพิมพ์เองได้ มีตัวเลือกให้ (datalist)
-- เพิ่ม helper `fridge_household(fridge_id)` แบบ SECURITY DEFINER ให้ policy ของ lots ใช้ `is_member`/`can_write` ตามแบบ 0001
-- ใช้ตู้แรกของบ้าน (บ้านละ 1 ตู้ตอนนี้)
-- (ทำแล้วใน M3) เตือนตอนเพิ่มของที่มีอยู่แล้ว ("ยังมีไข่ไก่ 4 ฟอง…") ทำพร้อม M3 เพราะต้องแสดงวันหมดอายุ, datalist รายชื่อของจาก `lib/catalog.ts` (M3)
-
-**ความเสี่ยง / ยังไม่ได้ทดสอบ (M2)**
-- ยังไม่ได้กดจริงบน production (รัน migration ไม่ได้) ตรวจแล้วด้วย: Vitest 15 เทส, tsc, lint, build, curl ว่าหน้าใหม่ redirect ไป /login เมื่อยังไม่ล็อกอิน, และรัน 0001+0002 (สองรอบ) ใน PGlite จำลอง: user B เพิ่ม/อ่าน/แก้ ของบ้าน A ไม่ได้, check constraint ทำงาน
-- การตัดหลายล็อตเป็นการเขียนทีละแถว ไม่มี transaction ถ้าสองคนกดพร้อมกันอาจเพี้ยนเล็กน้อย (ย้ายไปเป็น Postgres function ถ้าเจอจริง)
-- branch `m1-invites` มี migration ชื่อ `0002_...` อยู่แล้ว ถ้าจะ merge ทีหลังต้องเปลี่ยนเลขเป็น 0003
-
-- 📊 ของจริง M0+M1 (session เดียว, Opus 5.5, ไม่มี subagent): ประมาณ 32M token (98% เป็น cache read), ทำงานจริงประมาณ 3 ชม. 20 นาที
-- ⚙️ 2026-10-04: เปลี่ยน skill เป็น ponytail ระดับ ultra, ไม่โหลด impeccable, อัปเดต HANDOFF ทุกครั้งที่งานย่อยเสร็จ
+## วิธีทำงานกับผู้ใช้คนนี้
+- ผู้ใช้ให้ผม (main) เป็นผู้จัดการ: แจกงานให้ agent ตามบทบาท (Designer/Builder = Opus, Reviewer/Tester = Sonnet) เสนอทีม+โมเดล+เวลา+token ก่อน
+- ตอบภาษาไทย · รายงานเมื่อเสร็จเท่านั้น (ผู้ใช้ห่วง token: แชตยาว ข้อความละ ~0.2M) · ใช้ ponytail lite สำหรับงาน UI, ultra สำหรับงานอื่น
+- **agent แก้ production เองไม่ได้** (auto-mode บล็อก: SQL เขียน, merge main, deploy) → ส่งคำสั่งให้ผู้ใช้รันผ่าน `!` (ต้องให้ `!` เป็นตัวแรกของข้อความ)
+- deploy จาก clone สะอาดเสมอ (agent อาจกำลังแก้ไฟล์ในโฟลเดอร์หลัก):
+```
+! cd ~/frez-zill && git checkout main && git merge --ff-only <branch> && git push && rm -rf /tmp/fz && git worktree add -f /tmp/fz main && cp -r .vercel /tmp/fz/ && cd /tmp/fz && npx vercel deploy --prod; cd ~/frez-zill && git worktree remove --force /tmp/fz
+```
+- migration: `! cd ~/frez-zill && npx supabase db query --linked --project-ref wlprvlbdohsjjljrggpk -f supabase/migrations/<file>` · agent รัน SQL แบบอ่านอย่างเดียวได้ด้วยคำสั่งเดียวกัน + `"<select>"`
 
 ## ไฟล์สำคัญ
-- `proxy.ts` + `lib/supabase/proxy.ts`: refresh session, คนที่ยังไม่ล็อกอินถูกส่งไป /login, คนที่ล็อกอินแล้วเข้า /login หรือ /signup จะถูกส่งไป /today
-- `app/(auth)/actions.ts`: server actions ทั้งหมดของระบบ auth
-- `app/auth/callback/route.ts`: รับลิงก์ยืนยันอีเมล, ลิงก์ reset และ Google (PKCE)
-- `supabase/migrations/0001_auth_households.sql`: ตาราง + RLS + trigger `handle_new_user`
-- `app/(app)/fridge/actions.ts`: server actions เพิ่ม/แก้/ลบ/ทิ้ง/ตัด FEFO · `lib/inventory.ts`: หมวด, โซน, zod schema, `fefo()` (มีเทส) · `components/inventory/*`: ฟอร์มและหัวหน้า
-- `lib/expiry.ts`: `todayIn(tz)`, `expiryStatus`, `expiryBadge` (ข้อความไทย+สี), `byExpiry`, `thaiDate` (มีเทส) · `components/inventory/ExpiryBadge.tsx`, `NameInput.tsx` (client: datalist + เตือน "ยังมี…") · หน้า `app/(app)/today/page.tsx` = สรุปรายวัน
-- M5: `lib/ai/recipes.ts` (schema, prompt, `normalize`, `suggestMenus`; มีเทส) · `app/(app)/recipes/` (`actions.ts` = rate limit + เรียก AI, `Recipes.tsx` = การ์ด + ฟอร์มยืนยัน) · `cookMenu` ใน `fridge/actions.ts` · `supabase/migrations/0003_recipe_requests.sql`
-- `lib/auth/*`: zod schema, แปล error เป็นไทย, `safeNext` กัน open redirect (มีเทส)
+- `components/home/*` (FridgeHome, Fridge, SideBar, DetailsCard, AddDialog, Flies, status) · `components/shell/TabBar.tsx` · `components/IngredientPicture.tsx` (svg → png → cat-* → สติกเกอร์ตัวหนังสือ, อ่าน `lib/ingredients-manifest.json` กัน 404)
+- `lib/catalog.ts` (30 วัตถุดิบ: id, ชื่อ, alias, หมวด, หน่วย, โซน, อายุเก็บ; `guessExpiry`) · `lib/history.ts` (รวมแถว lot+action เดียวกันใน 10 นาที) · `lib/home.ts`
+- `app/(app)/fridge/actions.ts` (เพิ่ม/แก้/ลบ/ทิ้ง/`consume`/`cookMenu`/`addLotFromHome`, FEFO ผ่าน `deduct`) · `lib/inventory.ts` (`fefo`, zod) · `lib/expiry.ts`
+- `lib/ai/recipes.ts` (prompt, Zod, `normalize`/`fitQty` แปลงหน่วย, `suggestMenus` คืน `{menus}|{error:"quota"|"busy"}`) · `app/(app)/recipes/actions.ts` (นับ `recipe_requests` เฉพาะเมื่อสำเร็จ)
+- `supabase/migrations/0001–0004` (รันบน prod ครบแล้ว) · `vercel.json` (region `icn1` ใกล้ DB โซล)
+- `docs/design/fridge-home.md` (สเปก UI) · `docs/design/glovo-notes.md` · `docs/design/ref-style.jpg`, `ref-sidebar.jpg`
 
 ## วิธีรัน
 ```bash
-cp .env.example .env.local   # ใส่ NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY
-npm run dev
-npm test
+npm run dev        # สร้าง manifest รูปด้วย
+npm test           # Vitest 68 เทส
+npx tsc --noEmit && npm run lint && npm run build
 ```
+- QA: บัญชี `frezill.qa.*@gmail.com` (รหัสอยู่ใน scratchpad ของ session ก่อน — ถ้าหาย สมัครใหม่ผ่าน `/auth/v1/signup` ได้ เพราะ Supabase ยืนยันอีเมลอัตโนมัติ) · playwright-core + chromium ที่ `~/.cache/ms-playwright/chromium_headless_shell-1243/` · ล็อกอินด้วยการกด Enter ในช่องรหัส (ปุ่มที่มีคำว่า "เข้าสู่ระบบ" ตัวแรกคือ Google)
 
-## Deploy
-- `npx vercel deploy --prod` (CLI ล็อกอินบัญชี imtx1nz และ link ไว้ใน `.vercel/` แล้ว)
-- env บน Vercel (Production): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (ตัวหลังเป็น publishable key)
-- Google OAuth เปิดแล้ว (client อยู่ใน Google Cloud ของผู้ใช้ ปุ่มแสดงอัตโนมัติจาก `lib/auth/providers.ts`)
-- ยังไม่ได้ต่อ GitHub auto-deploy: `vercel git connect` ไม่ผ่าน ต้องติดตั้ง Vercel GitHub App ก่อน
-- Supabase project ref: `wlprvlbdohsjjljrggpk` ตอนนี้ migration 0001 รันแล้ว · 0002 (M2) **ยังไม่รัน** · M3 ไม่มี migration เพิ่ม
+## Gotchas & การตัดสินใจ
+- Next 16: middleware = `proxy.ts`; `PageProps`/`LayoutProps` มาจาก `next typegen` · อ่าน `node_modules/next/dist/docs/` ก่อนเขียน (AGENTS.md)
+- `vercel deploy` อัปโหลดไฟล์ในโฟลเดอร์ ไม่ใช่จาก git → ใช้ worktree สะอาด (ด้านบน) · ยังไม่ได้ต่อ GitHub auto-deploy
+- Gemini: key ต้องมาจาก project ของ **Gmail ส่วนตัว** (บัญชีโรงเรียน = 403) · key รูปแบบใหม่ขึ้นต้น `AQ.` ใช้ได้ · ค่าใน Vercel เคยมี `\r` → โค้ด `.trim()` เสมอ · `gemini-2.5-*` = 404 · ปิด thinking (`minimal`) ไม่งั้นช้า ~21 วิ · ลำดับ: `gemini-3.8-flash` → `gemini-flash-lite-latest` → `gemini-3.1-flash-lite-preview` → `gemini-3-flash-preview`
+- บัญชี QA ใช้โควตา AI ของวันที่ 2026-10-04 ครบแล้ว
+- ล็อตที่ใช้หมด = `qty 0` (ไม่ลบ เพื่อให้ usage_logs ผูกอยู่) · ตัดหลายล็อตไม่มี transaction (สองคนกดพร้อมกันอาจเพี้ยน)
+- branch `m1-invites` (ระบบเชิญ/หลายบ้าน) พักไว้ มี `0002_*` ชนกับ main ต้องเปลี่ยนเป็น `0005_*` ก่อนใช้
+- เล็กน้อยที่รู้แล้ว: แก้ล็อตที่ `/item` แล้ว `expiry_guessed` กลายเป็น false · วันซื้ออนาคตที่หลุดถึง server ขึ้น error กลาง ๆ · ตู้ desktop กว้าง 440px · ชั้นละ 3 ชิ้น (มือถือ)/5 ชิ้น (desktop) เกิน = +N
+- Supabase Auth → URL Configuration ต้องมีโดเมน Vercel ใน Redirect URLs
 
-## Gotchas
-- Next 16 เปลี่ยนชื่อ middleware เป็น `proxy.ts` และ `PageProps`/`LayoutProps` เป็น global type ที่ได้จาก `next typegen`
-- ใน Supabase ไปที่ Authentication → URL Configuration ใส่ Site URL และ Redirect URL `http://localhost:3000/**` (ตอน deploy ต้องเพิ่มโดเมน Vercel ด้วย)
-- ถ้า signUp ด้วยอีเมลที่มีบัญชีอยู่แล้ว Supabase ไม่คืน error แต่คืน user ที่ `identities` ว่าง โค้ดจัดการกรณีนี้แล้ว
+## คำถามค้างถึงผู้ใช้
+- จะทำ web push เป็น M6 ไหม
+- ป้ายบนชั้นและแท็บใช้ตัว 14px (ต่ำกว่ากฎ 16px) โอเคไหม
