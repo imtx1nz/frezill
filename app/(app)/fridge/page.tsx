@@ -8,6 +8,8 @@ import { CATEGORIES, ZONES } from "@/lib/inventory";
 import { todayIn } from "@/lib/expiry";
 import { ExpiryBadge } from "@/components/inventory/ExpiryBadge";
 import { PageHeader } from "@/components/inventory/PageHeader";
+import { IngredientPicture } from "@/components/IngredientPicture";
+import { signOut } from "@/app/(auth)/actions";
 import { consume } from "./actions";
 
 export const metadata: Metadata = { title: "ตู้เย็น" };
@@ -83,15 +85,20 @@ export default async function FridgePage() {
           const total = lots.reduce((s, l) => s + l.qty, 0);
           return (
             <li key={lots[0].id} className="rounded-2xl bg-surface p-4 shadow-[0_10px_30px_-18px_rgb(4_40_30/0.35)]">
-              <div className="flex items-baseline justify-between gap-3">
-                <h2 className="text-lg font-semibold">{name}</h2>
-                <p className="shrink-0 font-semibold">
-                  {fmt(total)} {unit}
-                </p>
+              <div className="flex items-center gap-3">
+                <IngredientPicture name={name} category={category} size={48} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <h2 className="text-lg font-semibold">{name}</h2>
+                    <p className="shrink-0 font-semibold">
+                      {fmt(total)} {unit}
+                    </p>
+                  </div>
+                  <p className="text-[0.9375rem] text-ink-3">
+                    {CATEGORIES[category] ?? category} · {ZONES[zone] ?? zone}
+                  </p>
+                </div>
               </div>
-              <p className="text-[0.9375rem] text-ink-3">
-                {CATEGORIES[category] ?? category} · {ZONES[zone] ?? zone}
-              </p>
               <div className="mt-3 flex gap-2">
                 <form action={consume.bind(null, fridge_id, name, unit, "one")} className="flex flex-1">
                   <PendingButton className={btn}>−1</PendingButton>
@@ -124,6 +131,13 @@ export default async function FridgePage() {
           );
         })}
       </ul>
+
+      {/* sign-out lives in the desktop top bar; on phones it sits here */}
+      <form action={signOut} className="mt-4 lg:hidden">
+        <button type="submit" className="flex min-h-11 items-center text-ink-2 underline hover:text-ink">
+          ออกจากระบบ
+        </button>
+      </form>
     </main>
   );
 }

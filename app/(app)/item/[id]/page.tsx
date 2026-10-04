@@ -23,7 +23,7 @@ export default async function ItemPage({ params, searchParams }: PageProps<"/ite
 
   return (
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-5 px-4 pb-10 pt-5">
-      <PageHeader back="/fridge" title={`แก้ไข ${lot.name}`} />
+      <PageHeader back="/today" title={`แก้ไข ${lot.name}`} />
       {error && <Notice tone="error">บันทึกไม่สำเร็จ ตรวจข้อมูลแล้วลองอีกครั้ง</Notice>}
       <form action={updateLot.bind(null, id)} className="flex flex-col gap-4">
         <LotFields lot={{ ...lot, qty: Number(lot.qty) }} />
