@@ -12,7 +12,7 @@
 - ✅ QA อัตโนมัติบน production (2026-10-04, Playwright + บัญชีทดสอบ `frezill.qa.*@gmail.com`): login, เพิ่ม, เตือนซ้ำ, FEFO (ตรวจใน DB แล้ว), แถบเตือน, เรียงวัน, แก้วัน, ทิ้ง, ลบ ผ่านหมด
   - 🐞 พบ: กดปุ่ม −1/ใช้ครึ่งหนึ่ง/หมดแล้ว แล้วหน้าจอเปลี่ยนช้า 4–5 วินาที และปุ่มไม่ล็อก (กดซ้ำ = ตัดซ้ำ) เพราะ function รันที่ iad1 แต่ DB อยู่โซล
   - ✅ แก้แล้วและขึ้น production (`04fe406`): `vercel.json` regions `icn1` + `PendingButton` ล็อกปุ่มระหว่างบันทึก · วัดซ้ำ: ปุ่มอัปเดตใน 1.1–1.8 วินาที (เดิม 3.9–4.8)
-- ➡️ ถัดไป: เปิด session ใหม่ทำ **M5** · ✅ `GEMINI_API_KEY` ใส่แล้วทั้ง `.env.local` และ Vercel Production (2026-10-04) · QA ใช้บัญชี `frezill.qa.*` ได้ (สคริปต์ Playwright เดิมอยู่ใน scratchpad ของ session ก่อน หาย ให้เขียนใหม่ด้วย playwright-core + chromium ใน `~/.cache/ms-playwright`)
+- ➡️ ถัดไป: เปิด session ใหม่ทำ **M5** · ✅ `GEMINI_API_KEY` ใส่แล้วทั้ง `.env.local` และ Vercel Production (Secret) ทดสอบแล้วได้ 200 (key รูปแบบใหม่ขึ้นต้น `AQ.` ใช้ได้) · ⚠️ ค่าที่วางเคยมี `\r` นำหน้า: ในโค้ดให้ `.trim()` key เสมอ เพราะค่าใน Vercel อ่านกลับมาเช็กไม่ได้ · QA ใช้บัญชี `frezill.qa.*` ได้ (สคริปต์ Playwright เดิมอยู่ใน scratchpad ของ session ก่อน หาย ให้เขียนใหม่ด้วย playwright-core + chromium ใน `~/.cache/ms-playwright`)
 - 🔧 Supabase CLI ล็อกอินแล้ว: รัน migration ได้ด้วย `npx supabase db query --linked --project-ref wlprvlbdohsjjljrggpk -f <file>` (agent โดนบล็อกตอนแก้ production ต้องให้ผู้ใช้รันเองผ่าน `!`)
 
 ## ขั้นขึ้น production (ทำเสร็จแล้ว 2026-10-04)
