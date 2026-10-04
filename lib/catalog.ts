@@ -92,6 +92,9 @@ export function catalogMatch(name: string) {
   })?.item;
 }
 
+/** Canonical catalog name (exact): such names are locked against renaming. */
+export const isLockedName = (name: string) => CATALOG.some((c) => c.name === name);
+
 export const catalogById = (id: string) => CATALOG.find((c) => c.id === id);
 
 /** Picture id: a catalog id, or the category fallback `cat-<category>` (underscores become dashes). */

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isLockedName } from "@/lib/catalog";
 import { fefo, lotSchema } from "@/lib/inventory";
 
 const fields = (fd: FormData) => Object.fromEntries(["name", "qty", "unit", "category", "zone", "expires_at", "expiry_guessed", "bought_on"].map((k) => [k, fd.get(k)]));
@@ -47,6 +48,8 @@ export async function updateLot(id: string, fd: FormData) {
   const parsed = lotSchema.safeParse(fields(fd));
   if (!parsed.success) redirect(`/item/${id}?error=1`);
   const supabase = await createClient();
+  const { data: old } = await supabase.from("lots").select("name").eq("id", id).maybeSingle();
+  if (old && isLockedName(old.name)) parsed.data.name = old.name;
   const { error } = await supabase.from("lots").update(parsed.data).eq("id", id);
   if (error) redirect(`/item/${id}?error=1`);
   done();

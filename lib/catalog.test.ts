@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CATALOG, CATEGORY_DAYS, blockLabel, catalogMatch, customItem, guessExpiry, myIngredients, pictureId, resolveCustom, shelfDays, spacingLength } from "./catalog";
+import { CATALOG, CATEGORY_DAYS, blockLabel, catalogMatch, customItem, isLockedName, guessExpiry, myIngredients, pictureId, resolveCustom, shelfDays, spacingLength } from "./catalog";
 import { homeTone } from "./expiry";
 import { flyCounts, groupItems, placeOf, type HomeLot } from "./home";
 import { dayLabel, groupByDay, minusDays } from "./history";
@@ -160,5 +160,13 @@ describe("custom ingredients", () => {
   it("switches to the catalog item when the typed name matches", () => {
     expect(resolveCustom("อกไก่ CP", "other").id).toBe("chicken");
     expect(resolveCustom("ผักสลัดบ้านเรา", "veg")).toMatchObject({ id: "my:ผักสลัดบ้านเรา", category: "veg", days: 3 });
+  });
+});
+
+describe("isLockedName", () => {
+  it("locks exact catalog names only", () => {
+    expect(isLockedName(CATALOG[0].name)).toBe(true);
+    expect(isLockedName(CATALOG[0].name + "x")).toBe(false);
+    expect(isLockedName("ผักสลัดบ้านเรา")).toBe(false);
   });
 });
