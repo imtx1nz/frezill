@@ -6,14 +6,16 @@
 - ✅ M0: Next.js 16 + Tailwind 4 + Supabase client + Vitest, deploy แล้วที่ https://frezill.vercel.app (Vercel project `frezill`)
 - ✅ M1 (ส่วนพื้นฐาน) ใช้งานได้จริงบน production (ผู้ใช้ล็อกอินด้วย Google ผ่านเมื่อ 2026-10-04): สมัครและล็อกอิน (อีเมล + Google), ลืมรหัสและตั้งรหัสใหม่, ออกจากระบบ, proxy กันหน้าที่ต้องล็อกอิน, trigger สร้างบ้านและตู้ให้อัตโนมัติ, RLS
 - ⏸ ระบบเชิญ/บทบาท/หลายบ้าน: **พักไว้ที่ branch `m1-invites`** (ผู้ใช้เลือกทำแค่พื้นฐาน) ถ้าจะใช้ต้องรัน migration 0002 ใน branch นั้นก่อน
-- 🟡 M2 โค้ดเสร็จแล้วที่ branch **`m2-lots`** (ยังไม่ merge, ยังไม่ deploy เพราะต้องรัน migration 0002 ก่อน ไม่งั้น production พัง): ✅ migration `0002_lots.sql` · ✅ FEFO + เทส · ✅ หน้า /fridge, /fridge/add, /item/[id] · ✅ test/tsc/lint/build ผ่าน
-- 🟡 M3+M4 โค้ดเสร็จแล้วที่ branch **`m3-expiry`** (แตกจาก `m2-lots` จึงมีงาน M2 ครบ, push แล้ว, ยังไม่ merge/deploy): ✅ `lib/expiry.ts` + เทส · ✅ ช่องวันหมดอายุ · ✅ หน้า today = สรุปรายวัน + แถบเตือน · ✅ เตือน "ยังมี…อยู่ในตู้" ตอนเพิ่มของ · ✅ test 33 เทส / tsc / lint / build ผ่าน
-- ➡️ ถัดไป: ทำขั้นด้านล่าง (M2+M3+M4 ขึ้น production พร้อมกัน) แล้วเปิด session ใหม่ทำ **M5** · **M5 ต้องมี `GEMINI_API_KEY` ก่อน** (สร้างที่ https://aistudio.google.com/apikey แล้วใส่ใน `.env.local` และ Vercel env)
+- ✅ M2 + M3+M4 ขึ้น production แล้ว (2026-10-04): migration 0002 รันบน Supabase แล้ว (ตรวจแล้ว: `lots` RLS 4 policy, `usage_logs` 2 policy), merge เข้า main (`8a0e488`), deploy แล้ว · curl เช็กแล้ว: /today /fridge /fridge/add /item/[id] redirect ไป login, /login 200
+  - ⚠️ **ยังไม่ได้กดทดสอบตอนล็อกอิน** → ผู้ใช้ต้องกดตามรายการ "กดเช็กบน…" ด้านล่าง
+  - เวลา: M2 agent ~6 นาที, M3+M4 agent ~5 นาที (agent รายงาน ~77k และ ~75k token ไม่รวม cache read)
+- ➡️ ถัดไป: เปิด session ใหม่ทำ **M5** · **ต้องมี `GEMINI_API_KEY` ก่อน** (สร้างที่ https://aistudio.google.com/apikey แล้วใส่ใน `.env.local` และ Vercel env)
+- 🔧 Supabase CLI ล็อกอินแล้ว: รัน migration ได้ด้วย `npx supabase db query --linked --project-ref wlprvlbdohsjjljrggpk -f <file>` (agent โดนบล็อกตอนแก้ production ต้องให้ผู้ใช้รันเองผ่าน `!`)
 
-## เช้านี้ทำ (M2 + M3+M4 ในรอบเดียว)
-1. [ ] เปิด Supabase → SQL Editor → วางเนื้อหาทั้งไฟล์ `supabase/migrations/0002_lots.sql` → Run (รันซ้ำได้ ไม่พัง) · **M3 ไม่มี 0003** (คอลัมน์ `expires_at`, `expiry_guessed` อยู่ใน 0002 แล้ว)
-2. [ ] `git checkout main && git merge m3-expiry && git push` (merge `m3-expiry` อย่างเดียวพอ เพราะมี `m2-lots` อยู่ข้างในแล้ว)
-3. [ ] `npx vercel deploy --prod`
+## ขั้นขึ้น production (ทำเสร็จแล้ว 2026-10-04)
+1. [x] เปิด Supabase → SQL Editor → วางเนื้อหาทั้งไฟล์ `supabase/migrations/0002_lots.sql` → Run (รันซ้ำได้ ไม่พัง) · **M3 ไม่มี 0003** (คอลัมน์ `expires_at`, `expiry_guessed` อยู่ใน 0002 แล้ว)
+2. [x] `git checkout main && git merge m3-expiry && git push` (merge `m3-expiry` อย่างเดียวพอ เพราะมี `m2-lots` อยู่ข้างในแล้ว)
+3. [x] `npx vercel deploy --prod`
 
 **กดเช็กบน https://frezill.vercel.app** (ล็อกอินก่อน)
 - หน้า today ตอนตู้ว่าง → ไม่มีแถบเตือน ไม่มีรายการสรุป · กดการ์ดตู้เย็น → หน้า "ของในตู้เย็น" (ว่าง มีข้อความชวนเพิ่ม)
