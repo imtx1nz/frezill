@@ -9,7 +9,8 @@ import { IngredientPicture } from "@/components/IngredientPicture";
 import { ExpiryBadge } from "@/components/inventory/ExpiryBadge";
 import { CUSTOM_TILE, type CatalogItem, type Zone } from "@/lib/catalog";
 import { thaiDate } from "@/lib/expiry";
-import { PLACES, flyCounts, groupItems, type HomeItem, type HomeLot, type Place } from "@/lib/home";
+import { PLACES, flyCounts, placeOf, groupItems, type HomeItem, type HomeLot, type Place } from "@/lib/home";
+import { SHELF_CAP, placementWarning } from "@/lib/placement";
 import { AddDialog } from "./AddDialog";
 import { DetailsCard, type CardBase, type CardTarget } from "./DetailsCard";
 import { Fridge } from "./Fridge";
@@ -29,6 +30,7 @@ type Drag = {
   timer: number;
   raf: number;
   over: "freezer" | "chill" | null;
+  place: Place | null;
 };
 
 // Once picked up, stop the page from scrolling under a touch drag. Attached only while dragging:
@@ -70,9 +72,16 @@ export function FridgeHome({
   const [spot, setSpot] = useState<"urgent" | "week" | null>(null);
   const [card, setCard] = useState<CardTarget | null>(null);
   const [form, setForm] = useState<{ cat: CatalogItem; zone: Zone; n: number; name?: string } | null>(null);
-  const [drag, setDrag] = useState<{ cat: CatalogItem; over: Drag["over"] } | null>(null);
+  const [drag, setDrag] = useState<{ cat: CatalogItem; over: Drag["over"]; place: Place | null } | null>(null);
   const [armed, setArmed] = useState<string | null>(null);
   const [popId, setPopId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ msg: string; warn: boolean } | null>(null);
+  const toastT = useRef(0);
+  const say = (msg: string, warn = true) => {
+    setToast({ msg, warn });
+    clearTimeout(toastT.current);
+    toastT.current = window.setTimeout(() => setToast(null), 3500);
+  };
   const [live, setLive] = useState("");
   const [collapsed, setCollapsedState] = useState(false);
 
@@ -153,6 +162,20 @@ export function FridgeHome({
     return inside(freezerRef.current) ? "freezer" : inside(chillRef.current) ? "chill" : null;
   };
 
+  const placeAt = (x: number, y: number): Place | null => {
+    for (const el of document.querySelectorAll<HTMLElement>("[data-place]")) {
+      const r = el.getBoundingClientRect();
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return el.dataset.place as Place;
+    }
+    return null;
+  };
+  // Shelf under the pointer, else the item's usual shelf in whichever zone it is over.
+  const targetAt = (g: Drag, x: number, y: number) => {
+    const zone = zoneAt(x, y);
+    return { zone, place: zone ? (placeAt(x, y) ?? placeOf(zone === "freezer" ? "freezer" : "chill", g.cat.category)) : null };
+  };
+  const isFull = (pl: Place) => byPlace[pl].length >= SHELF_CAP[pl][matchMedia("(min-width:1024px)").matches ? 1 : 0];
+
   const frame = () => {
     const g = d.current;
     const el = ghostRef.current;
@@ -162,10 +185,11 @@ export function FridgeHome({
     g.lastX = g.x;
     g.tilt += (Math.max(-8, Math.min(8, vx * 0.6)) - g.tilt) * 0.2;
     el.style.transform = `translate3d(${g.x - 40}px, ${g.y - 40}px, 0) rotate(${g.tilt}deg)`;
-    const over = zoneAt(g.x, g.y);
-    if (over !== g.over) {
+    const { zone: over, place } = targetAt(g, g.x, g.y);
+    if (over !== g.over || place !== g.place) {
       g.over = over;
-      setDrag((s) => s && { ...s, over });
+      g.place = place;
+      setDrag((s) => s && { ...s, over, place });
     }
   };
 
@@ -180,7 +204,7 @@ export function FridgeHome({
     navigator.vibrate?.(10);
     clearTimeout(hoverT.current);
     setCard(null);
-    setDrag({ cat: g.cat, over: null });
+    setDrag({ cat: g.cat, over: null, place: null });
     document.documentElement.dataset.dragging = "";
     window.addEventListener("touchmove", blockScroll, { passive: false });
     setLive(`หยิบ${g.cat.name}แล้ว ลากไปวางในตู้`);
@@ -239,8 +263,21 @@ export function FridgeHome({
     if (!g.picked) return; // a plain tap/click: onClick handles it
     blockClick.current = true;
     setTimeout(() => (blockClick.current = false), 0);
-    const over = zoneAt(e.clientX, e.clientY);
-    if (!over) return flyBack(g);
+    const { zone: over, place } = targetAt(g, e.clientX, e.clientY);
+    if (!over || !place) return flyBack(g);
+    if (isFull(place)) {
+      say("ชั้นนี้เต็มแล้ว", false);
+      ghostRef.current?.firstElementChild?.animate(
+        [{ transform: "translateX(0)" }, { transform: "translateX(-8px)" }, { transform: "translateX(8px)" }, { transform: "translateX(-6px)" }, { transform: "translateX(0)" }],
+        { duration: 200 },
+      ).finished.then(() => flyBack(g), () => flyBack(g));
+      return;
+    }
+    document.querySelectorAll<HTMLElement>(`[data-place="${place}"] li`).forEach((li, i) =>
+      li.animate([{ transform: "none" }, { transform: `translateX(${i % 2 ? 10 : -10}px)` }, { transform: "none" }], { duration: 300, easing: "ease-out" }),
+    );
+    const warn = placementWarning(g.cat.id, g.cat.category, place);
+    if (warn) say(warn);
     const el = ghostRef.current?.firstElementChild as HTMLElement | null;
     chillRef.current?.animate([{ transform: "translateY(2px)" }, { transform: "none" }], { duration: 140, easing: "ease-out" });
     const open = () => {
@@ -280,6 +317,7 @@ export function FridgeHome({
       timer: 0,
       raf: 0,
       over: null,
+      place: null,
     };
     if (e.pointerType !== "mouse") {
       setArmed(cat.id);
@@ -403,6 +441,7 @@ export function FridgeHome({
           spot={spot}
           popId={popId}
           over={drag?.over ?? null}
+          hot={drag?.place ? { place: drag.place, full: isFull(drag.place) } : null}
           openKey={card?.key ?? null}
           canWrite={canWrite}
           freezerRef={freezerRef}
@@ -504,6 +543,11 @@ export function FridgeHome({
         />
       )}
 
+      {toast && (
+        <p role="status" className={`fixed inset-x-4 bottom-24 z-[70] mx-auto max-w-sm rounded-2xl border-2 border-outline px-4 py-2 text-center font-medium shadow-lg ${toast.warn ? "bg-[#FFE27A]" : "bg-cream"}`}>
+          {toast.msg}
+        </p>
+      )}
       <p aria-live="polite" className="sr-only">
         {live}
       </p>
