@@ -1,6 +1,6 @@
 # HANDOFF — frezill
 
-**อัปเดต:** 2026-10-04 (M5) · กฎการพัฒนาอยู่ที่ `.claude/skills/frezill-dev/SKILL.md`
+**อัปเดต:** 2026-10-04 (M5 ขึ้น production แล้ว) · กฎการพัฒนาอยู่ที่ `.claude/skills/frezill-dev/SKILL.md`
 
 ## สถานะ
 - ✅ M0: Next.js 16 + Tailwind 4 + Supabase client + Vitest, deploy แล้วที่ https://frezill.vercel.app (Vercel project `frezill`)
@@ -12,13 +12,14 @@
 - ✅ QA อัตโนมัติบน production (2026-10-04, Playwright + บัญชีทดสอบ `frezill.qa.*@gmail.com`): login, เพิ่ม, เตือนซ้ำ, FEFO (ตรวจใน DB แล้ว), แถบเตือน, เรียงวัน, แก้วัน, ทิ้ง, ลบ ผ่านหมด
   - 🐞 พบ: กดปุ่ม −1/ใช้ครึ่งหนึ่ง/หมดแล้ว แล้วหน้าจอเปลี่ยนช้า 4–5 วินาที และปุ่มไม่ล็อก (กดซ้ำ = ตัดซ้ำ) เพราะ function รันที่ iad1 แต่ DB อยู่โซล
   - ✅ แก้แล้วและขึ้น production (`04fe406`): `vercel.json` regions `icn1` + `PendingButton` ล็อกปุ่มระหว่างบันทึก · วัดซ้ำ: ปุ่มอัปเดตใน 1.1–1.8 วินาที (เดิม 3.9–4.8)
-- 🟡 **M5 (AI เมนู) โค้ดเสร็จบน branch `m5-recipes` ยังไม่ขึ้น production** (2026-10-04) · Vitest 41 เทส, tsc, lint, build ผ่าน
-  - ⛔ **ยิง Gemini จริงไม่ผ่าน (ปัญหาที่ key/โปรเจกต์ Google ไม่ใช่โค้ด):** `gemini-2.5-flash` ตอบ 404 "no longer available to new users" ให้ใช้ `gemini-3.8-flash` แทน แต่ทุกรุ่น (3.8/3.7/3.6/3.5/flash-latest) ตอบ 403 "Your project has been denied access. Please contact support." → ผู้ใช้ต้องเข้า Google AI Studio เช็กโปรเจกต์/billing หรือสร้าง key ใหม่ในโปรเจกต์อื่น แล้วใส่ใหม่ทั้ง `.env.local` และ Vercel
-  - เช็ก key เร็ว ๆ: `K=$(grep ^GEMINI_API_KEY .env.local | cut -d= -f2- | tr -d '\r\n "'); curl -s -o /dev/null -w '%{http_code}\n' -H "x-goog-api-key: $K" -H 'content-type: application/json' -d '{"contents":[{"parts":[{"text":"hi"}]}]}' https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent` ต้องได้ `200`
+- ✅ M5 ขึ้น production แล้ว (2026-10-04, `89ee7ee`): 0003 `recipe_requests` รันแล้ว · Tester (Playwright + บัญชี QA) ผ่านครบ: ได้ 3 เมนูใน 6.7–8.5 วิ, ใช้ของใกล้หมดก่อน, มีคำเตือน AI ทุกการ์ด, "ทำเมนูนี้แล้ว" ตัดของถูก (DB usage_logs ตรง), ครั้งที่ 11 ถูกปฏิเสธ, ไม่มี error/5xx
+  - Gemini: `gemini-3.8-flash` → สำรอง `gemini-flash-latest`, `gemini-3-flash-preview` · ปิด thinking (`thinkingLevel: minimal`) เพราะทำให้ช้า ~21 วิ · key ต้องมาจาก project ของ Gmail ส่วนตัว (project จากบัญชีโรงเรียนโดน 403 "denied access")
+  - เล็กน้อย: ขอครั้งที่ 11 แล้วการ์ดเมนูเดิมหายไป (เมนูไม่ได้บันทึก) · FEFO ข้ามหลายล็อตในเมนูยังไม่ได้ทดสอบจริง · ภาพ desktop ตอนมีเมนูยังไม่ได้ดู · บัญชี QA ใช้โควตาวันนี้ครบ 10 แล้ว
+- ➡️ ถัดไป: ขอบเขต "ทำตอนนี้" เหลือ **แจ้งเตือน web push** (ยังไม่มีแถวในตาราง milestone) ถามผู้ใช้ก่อนว่าจะทำเป็น M6 ไหม
 - 🔧 QA ใช้บัญชี `frezill.qa.*` ได้ (สคริปต์ Playwright เดิมหาย ให้เขียนใหม่ด้วย playwright-core + chromium ใน `~/.cache/ms-playwright`)
 - 🔧 Supabase CLI ล็อกอินแล้ว: รัน migration ได้ด้วย `npx supabase db query --linked --project-ref wlprvlbdohsjjljrggpk -f <file>` (agent โดนบล็อกตอนแก้ production ต้องให้ผู้ใช้รันเองผ่าน `!`)
 
-## ขั้นขึ้น production M5
+## ขั้นขึ้น production M5 (ทำเสร็จแล้ว)
 0. [ ] ทำให้ Gemini key ใช้ได้ก่อน (ดู ⛔ ด้านบน) คำสั่งเช็กต้องได้ `200` · ถ้าจะใช้รุ่นอื่นไม่ต้องแก้โค้ด ตั้ง env `GEMINI_MODEL` (ค่าเริ่มต้น `gemini-3.8-flash`)
 1. [ ] รัน migration 0003 (ตาราง `recipe_requests` + RLS, รันซ้ำได้): `npx supabase db query --linked --project-ref wlprvlbdohsjjljrggpk -f supabase/migrations/0003_recipe_requests.sql`
    - เช็ก: `npx supabase db query --linked --project-ref wlprvlbdohsjjljrggpk "select policyname from pg_policies where tablename='recipe_requests'"` ต้องได้ 2 แถว
