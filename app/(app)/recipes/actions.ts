@@ -36,10 +36,11 @@ export async function suggest(): Promise<State> {
   const items = [...byKey.values()];
   if (!items.length) return { error: "ยังไม่มีของในตู้ที่ยังไม่หมดอายุ เพิ่มของก่อนแล้วค่อยขอเมนู" };
 
+  const r = await suggestMenus(items);
+  if ("error" in r) return { error: r.error === "quota" ? "วันนี้ AI ใช้ครบโควตาแล้ว ลองใหม่พรุ่งนี้" : "AI ไม่ว่าง ลองใหม่อีกครั้ง" };
+
+  // Insert only on success so failures don't burn the household's 10/day (no DELETE policy). Small race: parallel requests can exceed LIMIT by a few.
   const { error } = await supabase.from("recipe_requests").insert({ household_id: h.id });
   if (error) return { error: "ขอเมนูไม่ได้ในตอนนี้ ลองใหม่อีกครั้ง" };
-
-  const menus = await suggestMenus(items);
-  if (!menus) return { error: "AI ไม่ว่าง ลองใหม่อีกครั้ง" };
-  return { menus, fridgeId, left: LIMIT - used - 1 };
+  return { menus: r.menus, fridgeId, left: LIMIT - used - 1 };
 }

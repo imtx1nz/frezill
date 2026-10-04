@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { normalize, parseMenus } from "./recipes";
 
 const menu = (over = {}) => ({
@@ -70,4 +70,16 @@ describe("normalize", () => {
       expect(q(6, "ฟอง", 0.5, "แผง").qty).toBe(0.5);
     });
   });
+});
+
+describe("suggestMenus errors", () => {
+  const items = [{ name: "ไข่ไก่", unit: "ฟอง", qty: 2, urgent: true }];
+  const run = async (status: number) => {
+    process.env.GEMINI_API_KEY = "k";
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status })));
+    const { suggestMenus } = await import("./recipes");
+    return suggestMenus(items);
+  };
+  it("all 429 → quota", async () => expect(await run(429)).toEqual({ error: "quota" }));
+  it("503 → busy", async () => expect(await run(503)).toEqual({ error: "busy" }), 15000); // real backoff 1+2+3s
 });

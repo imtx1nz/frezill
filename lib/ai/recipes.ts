@@ -70,8 +70,8 @@ ${diet ? `ข้อจำกัดด้านอาหาร: ${diet}\n` : ""}�
 - ตอบเป็นภาษาไทย`;
 }
 
-// Fallback chain: Gemini often 503s ("high demand") on one model while another is fine.
-const models = () => [...new Set([process.env.GEMINI_MODEL?.trim(), "gemini-3.8-flash", "gemini-flash-latest", "gemini-3-flash-preview"].filter(Boolean) as string[])];
+// Fallback chain: Gemini often 503s on one model while another is fine; free tier is 20 req/day/model (429). Not gemini-flash-latest (shares 3.8's quota).
+const models = () => [...new Set([process.env.GEMINI_MODEL?.trim(), "gemini-3.8-flash", "gemini-flash-lite-latest", "gemini-3.1-flash-lite-preview", "gemini-3-flash-preview"].filter(Boolean) as string[])];
 
 // Gemini's own schema (OpenAPI subset) — guides the model; Zod above is the real gate.
 const S = { type: "STRING" };
@@ -104,31 +104,34 @@ const responseSchema = {
   },
 };
 
-/** Server only. 3 menus that use urgent items first, or null after trying every model ("AI ไม่ว่าง"). Worst case ~25s. */
-export async function suggestMenus(items: Item[], diet?: string): Promise<Menu[] | null> {
+/** Server only. 3 menus that use urgent items first, or an error: "quota" = every model hit its daily 429, "busy" = anything else. Worst case ~25s. */
+export async function suggestMenus(items: Item[], diet?: string): Promise<{ menus: Menu[] } | { error: "quota" | "busy" }> {
   const key = process.env.GEMINI_API_KEY?.trim(); // Vercel value had a leading \r
-  if (!key) return null;
+  if (!key) return { error: "busy" };
   const body = JSON.stringify({
     contents: [{ parts: [{ text: buildPrompt(items, diet) }] }],
-    generationConfig: { responseMimeType: "application/json", responseSchema, thinkingConfig: { thinkingLevel: "minimal" } }, // thinking made calls ~20s,
+    generationConfig: { responseMimeType: "application/json", responseSchema, thinkingConfig: { thinkingLevel: "minimal" } }, // thinking made calls ~20s; all 4 models accept minimal
   });
   const start = Date.now();
-  let why = "";
-  for (const [n, model] of models().entries()) {
-    if (n) await new Promise((r) => setTimeout(r, n * 1000)); // back off 1s, 2s, 3s
+  let why = "", backoff = 0, quota = 0, tried = 0;
+  for (const model of models()) {
     if (Date.now() - start > 12000) break;
+    if (backoff) await new Promise((r) => setTimeout(r, backoff * 1000));
+    tried++;
     try {
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, { method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": key }, body, signal: AbortSignal.timeout(12000) });
       why = `${res.status} ${model}`;
-      if (!res.ok) continue;
+      if (res.status === 429) { quota++; continue; } // daily quota: next model now, no backoff
+      if (!res.ok) { backoff++; continue; }
       const json = await res.json();
       const menus = parseMenus(json?.candidates?.[0]?.content?.parts?.[0]?.text);
-      if (menus) return normalize(menus, items);
+      if (menus) return { menus: normalize(menus, items) };
       why = `bad output ${model}`;
     } catch {
       why = `network/timeout ${model}`;
+      backoff++;
     }
   }
   console.warn("suggestMenus gave up:", why);
-  return null;
+  return { error: quota === tried ? "quota" : "busy" };
 }
