@@ -123,6 +123,21 @@ lib/catalog.ts       รายชื่อของตั้งต้น ~60 ร
 ### เอกสาร
 - แผนและเอกสารเขียนว่า **จะสร้างอะไร** ไม่ต้องมีหัวข้อ "ปัญหา"
 
+
+### UI rules (จาก Glovo study 2026-10-04, ดู `docs/design/glovo-notes.md` และสเปก `docs/design/fridge-home.md`)
+- Every repeated item (fridge item, side-bar tile, history row, recipe card) uses the **same slot layout**: picture first, expiry badge top-left, qty bottom-right, one bold name line, grey meta under it.
+- **One bold line per card or row.** Everything else is regular weight; numbers may be bold.
+- Category and ingredient tiles are a flat `--cream` square well with the outline. The sticker fills about 85% and the label sits **below** the tile, never on the picture.
+- Summaries are **stat rows** (round outlined icon badge + bold number + short label), not sentences.
+- Offer **quick-pick chips before free inputs** (expiry, qty, discard reason); the typed field is the fallback.
+- Increment in place: "+" becomes "− n +" where it stands. Never open a new screen or modal just to set a quantity.
+- Sections are a heading + optional round "→" button, separated by 24–32px of space, not dividers.
+- One primary candy-green action per screen or sheet, full width at the bottom.
+- Status copy is one human Thai line, naming a person when it's household data ("น้อยเพิ่งใช้หมูสับ"). Never use system phrasing.
+- Use progress bars (8px, rounded, outlined) for ratios like ใช้ทัน vs ทิ้ง, not pie charts.
+- Glovo is a reference for structure and flow only. Never import its flat borderless cards, photos, teal, purple or yellow-on-content chips.
+- Loading is skeletons in the exact shape of the final card (opacity pulse), and empty states are one sticker + one line + one candy button.
+
 ## Milestones (แผนพื้นฐาน + ponytail ultra, ตัดสินใจ 2026-10-04)
 ทำเฉพาะสิ่งที่โจทย์ 6 ข้อบังคับ ระบบเชิญ/บทบาท/หลายบ้านเก็บไว้ที่ branch `m1-invites` (ยังไม่ merge) ส่วน web push, PWA, cron, M6 ไม่ทำ
 
