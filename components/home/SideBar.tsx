@@ -83,9 +83,9 @@ export function SideBar({
   // Memoized so a sheet open/close (only data-sheet changes) re-renders none of the tiles.
   const grid = useMemo(
     () => (
-      <ul className="flex min-h-0 flex-1 gap-2.5 overflow-x-auto overscroll-contain px-3 pb-4 pt-2.5 group-data-[sheet=expanded]:grid group-data-[sheet=expanded]:grid-cols-3 group-data-[sheet=expanded]:content-start group-data-[sheet=expanded]:overflow-y-auto lg:grid lg:grid-cols-3 lg:content-start lg:overflow-y-auto">
+      <ul className="flex min-h-0 flex-1 gap-[7.5px] overflow-x-auto overscroll-contain px-2.5 pb-3 pt-2 lg:gap-2.5 lg:px-3 lg:pb-4 lg:pt-2.5 group-data-[sheet=expanded]:grid group-data-[sheet=expanded]:grid-cols-4 group-data-[sheet=expanded]:content-start group-data-[sheet=expanded]:overflow-y-auto lg:grid lg:grid-cols-3 lg:content-start lg:overflow-y-auto">
         {tilesShown.map((c) => (
-          <li key={c.id} className="relative max-lg:group-data-[sheet=peek]:w-[84px] max-lg:group-data-[sheet=peek]:shrink-0">
+          <li key={c.id} className="relative max-lg:group-data-[sheet=peek]:w-[63px] max-lg:group-data-[sheet=peek]:shrink-0">
             <div
               role="button"
               tabIndex={0}
@@ -124,7 +124,7 @@ export function SideBar({
             </div>
             <span
               aria-hidden="true"
-              className="mt-1.5 block truncate text-center text-[0.875rem] font-semibold leading-[1.2] text-white group-data-[sheet=expanded]:line-clamp-2 group-data-[sheet=expanded]:whitespace-normal lg:line-clamp-2 lg:whitespace-normal"
+              className="mt-1 block truncate text-center text-xs lg:mt-1.5 lg:text-[0.875rem] font-semibold leading-[1.2] text-white group-data-[sheet=expanded]:line-clamp-2 group-data-[sheet=expanded]:whitespace-normal lg:line-clamp-2 lg:whitespace-normal"
             >
               {c.name}
             </span>
@@ -134,9 +134,9 @@ export function SideBar({
               data-plus
               onClick={() => tiles.onPlus(c)}
               aria-label={`เพิ่ม${c.name}เข้าตู้`}
-              className="absolute -right-1.5 -top-1.5 z-[1] grid size-[26px] place-items-center rounded-full border-2 border-outline bg-[var(--candy-green)] text-outline before:absolute before:-inset-[9px] before:content-['']"
+              className="absolute -right-1.5 -top-1.5 z-[1] grid size-5 place-items-center lg:size-[26px] rounded-full border-2 border-outline bg-[var(--candy-green)] text-outline before:absolute before:-inset-[10px] lg:before:-inset-[9px] before:content-['']"
             >
-              <Plus className="size-3.5" strokeWidth={3.5} aria-hidden="true" />
+              <Plus className="size-2.5 lg:size-3.5" strokeWidth={3.5} aria-hidden="true" />
             </button>
             )}
           </li>
@@ -152,8 +152,8 @@ export function SideBar({
       id="ingredients"
       aria-label="แถบวัตถุดิบ"
       data-sheet={sheet}
-      className={`panel group fixed inset-x-0 bottom-[var(--tabbar-h)] z-30 flex h-[70dvh] flex-col !rounded-b-none !border-x-0 !border-b-0 transition-transform duration-200 ease-[var(--ease-out)] ${
-        expanded ? "" : "translate-y-[calc(70dvh-var(--peek))]"
+      className={`panel group fixed inset-x-0 bottom-[var(--tabbar-h)] z-30 flex h-[52dvh] flex-col !rounded-b-none !border-x-0 !border-b-0 transition-transform duration-200 ease-[var(--ease-out)] ${
+        expanded ? "" : "translate-y-[calc(52dvh-var(--peek))]"
       } lg:inset-x-auto lg:bottom-auto lg:right-4 lg:top-[80px] lg:h-auto lg:max-h-[calc(100vh-100px)] lg:w-[340px] lg:translate-y-0 lg:!rounded-[24px] lg:!border-[length:var(--ow-lg)] lg:duration-[240ms] ${
         collapsed ? "lg:translate-x-[calc(100%+16px)]" : ""
       }`}
@@ -180,18 +180,18 @@ export function SideBar({
         onPointerMove={onGrabMove}
         onPointerUp={onGrabUp}
         onPointerCancel={onGrabUp}
-        className="grid h-6 shrink-0 touch-none place-items-center lg:hidden"
+        className="grid h-5 shrink-0 touch-none place-items-center lg:hidden"
       >
         <span className="h-[5px] w-10 rounded-full bg-white/60" />
       </button>
 
-      <div className="flex shrink-0 gap-2 px-3 lg:pt-3">
+      <div className="flex shrink-0 gap-1.5 px-2.5 lg:gap-2 lg:px-3 lg:pt-3">
         <label className="relative shrink-0">
           <span className="sr-only">หมวด</span>
           <select
             value={cat}
             onChange={(e) => setCat(e.target.value)}
-            className="btn-candy btn-cream !h-11 !min-h-11 max-w-[9.5rem] appearance-none truncate !pl-4 !pr-9 !text-base after:hidden"
+            className="btn-candy btn-cream !h-10 !min-h-10 max-w-[7.5rem] appearance-none truncate !pl-3 !pr-8 !text-xs lg:!h-11 lg:!min-h-11 lg:max-w-[9.5rem] lg:!pl-4 lg:!pr-9 lg:!text-base after:hidden"
           >
             <option value="all">ทั้งหมด</option>
             {mine.length > 0 && <option value="mine">ของฉัน</option>}
@@ -201,10 +201,10 @@ export function SideBar({
               </option>
             ))}
           </select>
-          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-5 -translate-y-1/2 text-outline" strokeWidth={3} aria-hidden="true" />
+          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-4 lg:right-3 lg:size-5 -translate-y-1/2 text-outline" strokeWidth={3} aria-hidden="true" />
         </label>
-        <label className="panel-well flex h-11 min-w-0 flex-1 items-center gap-2 px-3">
-          <Search className="size-[18px] shrink-0 text-[#C9D2F0]" strokeWidth={2.5} aria-hidden="true" />
+        <label className="panel-well flex h-10 min-w-0 flex-1 items-center gap-1.5 px-2.5 text-xs lg:h-11 lg:gap-2 lg:px-3 lg:text-base">
+          <Search className="size-3.5 shrink-0 text-[#C9D2F0] lg:size-[18px]" strokeWidth={2.5} aria-hidden="true" />
           <span className="sr-only">ค้นหาของ</span>
           <input
             type="search"
@@ -215,7 +215,7 @@ export function SideBar({
           />
         </label>
       </div>
-      <p className={`px-4 pt-1 text-[0.875rem] font-semibold ${expanded ? "" : "max-lg:sr-only"}`} aria-live="polite">
+      <p className={`px-3 pt-0.5 text-xs font-semibold lg:px-4 lg:pt-1 lg:text-[0.875rem] ${expanded ? "" : "max-lg:sr-only"}`} aria-live="polite">
         {shown.length} อย่าง
       </p>
 
