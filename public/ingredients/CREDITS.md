@@ -1,6 +1,6 @@
 # Ingredient icons credits
 
-Icons: Microsoft Fluent Emoji, 3D style (256x256 PNG, unmodified except re-compressed)
+Icons: Microsoft Fluent Emoji, Flat style (SVG, unmodified)
 Source: https://github.com/microsoft/fluentui-emoji
 License: MIT License, Copyright (c) Microsoft Corporation.
 The MIT license requires that the copyright notice and permission notice be included in copies
