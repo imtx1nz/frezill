@@ -11,7 +11,7 @@
   - เวลา: M2 agent ~6 นาที, M3+M4 agent ~5 นาที (agent รายงาน ~77k และ ~75k token ไม่รวม cache read)
 - ✅ QA อัตโนมัติบน production (2026-10-04, Playwright + บัญชีทดสอบ `frezill.qa.*@gmail.com`): login, เพิ่ม, เตือนซ้ำ, FEFO (ตรวจใน DB แล้ว), แถบเตือน, เรียงวัน, แก้วัน, ทิ้ง, ลบ ผ่านหมด
   - 🐞 พบ: กดปุ่ม −1/ใช้ครึ่งหนึ่ง/หมดแล้ว แล้วหน้าจอเปลี่ยนช้า 4–5 วินาที และปุ่มไม่ล็อก (กดซ้ำ = ตัดซ้ำ) เพราะ function รันที่ iad1 แต่ DB อยู่โซล
-  - 🔧 แก้แล้วที่ branch **`fix-consume-latency`**: `vercel.json` regions `icn1` + `PendingButton` ล็อกปุ่มระหว่างบันทึก · test/tsc/lint/build ผ่าน · **ยังไม่ merge/deploy** (agent โดนบล็อก ผู้ใช้ต้องรันเอง)
+  - ✅ แก้แล้วและขึ้น production (`04fe406`): `vercel.json` regions `icn1` + `PendingButton` ล็อกปุ่มระหว่างบันทึก · วัดซ้ำ: ปุ่มอัปเดตใน 1.1–1.8 วินาที (เดิม 3.9–4.8)
 - ➡️ ถัดไป: เปิด session ใหม่ทำ **M5** · **ต้องมี `GEMINI_API_KEY` ก่อน** (สร้างที่ https://aistudio.google.com/apikey แล้วใส่ใน `.env.local` และ Vercel env)
 - 🔧 Supabase CLI ล็อกอินแล้ว: รัน migration ได้ด้วย `npx supabase db query --linked --project-ref wlprvlbdohsjjljrggpk -f <file>` (agent โดนบล็อกตอนแก้ production ต้องให้ผู้ใช้รันเองผ่าน `!`)
 
