@@ -460,7 +460,8 @@ a {
     bottom: -5px;
     height: 6px;
     border-radius: 50%;
-    background: rgb(18 32 26 / 0.18);
+    background: rgb(18 32 26 / 0.22);
+    filter: blur(2px);
     z-index: -1;
   }
   .fitem:focus-visible,

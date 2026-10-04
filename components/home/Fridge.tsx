@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { ArrowDown, ArrowRight } from "lucide-react";
-import { IngredientPicture, pictureFile } from "@/components/IngredientPicture";
+import { pictureFile } from "@/components/IngredientPicture";
+import { iconCount } from "@/lib/icon-count";
 import type { HomeItem, Place } from "@/lib/home";
 import { Flies } from "./Flies";
 import { QtyBadge, ToneBadge, fmt, statusText } from "./status";
@@ -29,6 +30,8 @@ type FridgeProps = {
   handlers: ItemHandlers;
 };
 
+// Pile offsets (px, px, deg); index 0 is the front icon.
+const PILE = [[0, 0, 0], [-8, 2, -6], [8, 0, 6], [0, -6, 0], [-4, -10, 4]] as const;
 const SPOT = { urgent: ["urgent", "expired"], week: ["week"] };
 
 /** The open fridge (§3.1–3.4): freezer, 3 shelves, crisper drawer, door bins; mobile caps 4, desktop 6. */
@@ -157,6 +160,7 @@ function Item({ item, small, ...p }: Props & { item: HomeItem; small: boolean })
   const art = pictureFile(l.name, l.category);
   const dim = p.spot && !SPOT[p.spot].includes(item.tone);
   const flies = p.flies.get(item.key);
+  const n = iconCount(item.total, l.unit) || 1;
   return (
     <button
       type="button"
@@ -171,13 +175,26 @@ function Item({ item, small, ...p }: Props & { item: HomeItem; small: boolean })
       onPointerLeave={p.handlers.onPointerLeave}
       onClick={(e) => p.handlers.onClick(e, item)}
     >
-      <IngredientPicture name={l.name} category={l.category} size={small ? 48 : 64} className="lg:hidden" />
-      <IngredientPicture name={l.name} category={l.category} size={small ? 56 : 72} className="max-lg:hidden" />
-      {art && (
-        <span
-          aria-hidden="true"
-          className="chip absolute bottom-0.5 left-0.5 z-[1] block !min-h-0 max-w-[calc(100%-30px)] truncate !px-1.5 !text-[0.75rem] !leading-[1.2]"
-        >
+      {art ? (
+        Array.from({ length: n }, (_, i) => {
+          const [x, y, r] = PILE[i];
+          return (
+            // eslint-disable-next-line @next/next/no-img-element -- same cached src for every icon in the pile
+            <img
+              key={i}
+              src={art}
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              decoding="async"
+              draggable={false}
+              className="absolute inset-0 size-full object-contain"
+              style={{ transform: `translate(${x}px,${y}px) rotate(${r}deg) scale(${n > 1 ? 0.85 : 1})`, zIndex: 5 - i }}
+            />
+          );
+        })
+      ) : (
+        <span aria-hidden="true" className="max-w-full truncate rounded-full bg-white/85 px-2.5 py-1 text-[0.875rem] font-semibold leading-tight text-outline">
           {l.name}
         </span>
       )}
