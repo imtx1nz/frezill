@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChefHat, ChevronRight, CircleCheck, Clock, List, TriangleAlert } from "lucide-react";
+import { ChefHat, ChevronRight, CircleCheck, Clock, TriangleAlert } from "lucide-react";
 import { Notice } from "@/components/auth/Notice";
 import { IngredientPicture } from "@/components/IngredientPicture";
 import { ExpiryBadge } from "@/components/inventory/ExpiryBadge";
@@ -15,6 +15,7 @@ import { AddDialog } from "./AddDialog";
 import { DetailsCard, type CardBase, type CardTarget } from "./DetailsCard";
 import { Fridge } from "./Fridge";
 import { SideBar } from "./SideBar";
+import { Menu } from "@/components/shell/Menu";
 
 type Drag = {
   cat: CatalogItem;
@@ -390,13 +391,7 @@ export function FridgeHome({
             {household} · {thaiDate(today)}
           </p>
         </div>
-        <Link
-          href="/fridge"
-          aria-label="ดูเป็นรายการ"
-          className="on-wall grid size-11 shrink-0 place-items-center rounded-2xl border-[length:var(--ow-md)] border-outline bg-white text-outline shadow-[0_3px_0_var(--outline)] lg:hidden"
-        >
-          <List className="size-5" strokeWidth={2.5} aria-hidden="true" />
-        </Link>
+        <Menu name={name} household={household} className="lg:hidden" />
       </header>
 
       <div className="flex flex-col gap-3 lg:[grid-area:chips]">

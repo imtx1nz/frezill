@@ -9,7 +9,6 @@ import { todayIn } from "@/lib/expiry";
 import { ExpiryBadge } from "@/components/inventory/ExpiryBadge";
 import { PageHeader } from "@/components/inventory/PageHeader";
 import { IngredientPicture } from "@/components/IngredientPicture";
-import { signOut } from "@/app/(auth)/actions";
 import { consume } from "./actions";
 
 export const metadata: Metadata = { title: "ตู้เย็น" };
@@ -132,12 +131,6 @@ export default async function FridgePage() {
         })}
       </ul>
 
-      {/* sign-out lives in the desktop top bar; on phones it sits here */}
-      <form action={signOut} className="mt-4 lg:hidden">
-        <button type="submit" className="flex min-h-11 items-center text-ink-2 underline hover:text-ink">
-          ออกจากระบบ
-        </button>
-      </form>
     </main>
   );
 }

@@ -15,6 +15,15 @@
 - ✅ AI: คิดเมนูจาก**ของอะไรก็ได้ในตู้** (ของใกล้หมดเป็นโบนัส ไม่บังคับ) · โมเดลสำรองเมื่อโควตาหมด
 - ✅ ตารางอายุเก็บใน `lib/catalog.ts` ใช้ค่าฝั่งปลอดภัยจากตารางที่ผู้ใช้ให้ (หมูสับ 1 วัน, หมูชิ้น 3, ผักใบ 3, กะหล่ำ/แครอท 7, พริก/มะนาว 14, ไข่ 21 ไม่แช่แข็ง)
 
+## ตั้งค่าอีเมล (branch `settings-email`: เมนู ≡ + หน้า /settings + อีเมลเตือนของใกล้หมดทุกเช้า 08:00)
+1. สมัคร brevo.com → Senders → เพิ่มอีเมลผู้ส่งแล้วกดยืนยันในอีเมล
+2. SMTP & API → API Keys → สร้าง key v3
+3. ใส่ env ใน Vercel Production (`npx vercel env add <NAME> production`): `BREVO_API_KEY`, `MAIL_FROM` (เช่น `frezill <you@gmail.com>` ต้องเป็นอีเมลที่ยืนยันแล้ว), `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Settings → API → service_role), `CRON_SECRET` (สุ่ม: `openssl rand -hex 32`)
+4. รัน migration `supabase/migrations/0005_notify_settings.sql`
+5. merge + deploy
+6. เปิด /settings กด "ส่งอีเมลทดสอบ" (จำกัด 1 ครั้ง/5 นาที)
+- ยังไม่ใส่ env = หน้า settings ขึ้น "ยังไม่ได้ตั้งค่าระบบอีเมล" (ไม่มีปุ่มตาย) · cron `0 1 * * *` เรียก `/api/cron/notify` (ไม่มี secret = 401)
+
 ## ถัดไป
 1. merge+deploy `lock-catalog-names` → ส่ง Tester (Sonnet) ลองลากเด้ง/ชั้นเต็ม/คำเตือน/ล็อกชื่อ บน production + วัด FPS มือถือซ้ำ
 2. (ไม่บังคับ) ผู้ใช้วาดรูปวัตถุดิบเองแทน Fluent 39 รูป (30 ชิ้น + 9 หมวด) ตามรายการ id ใน `lib/catalog.ts` → วางใน `public/ingredients/<id>.svg|png` (512×512 พื้นใส) → `node scripts/ingredients-manifest.mjs` → commit รูป+`lib/ingredients-manifest.json` → deploy (ไม่ต้องแก้โค้ด; ยังไม่มีรูป = สติกเกอร์ตัวหนังสือ) · คู่มือวาด: สเปก §4.5
