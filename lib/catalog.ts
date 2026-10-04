@@ -152,3 +152,47 @@ export function blockLabel(name: string, size: PictureSize): string[] {
   if (lines.length > 2) return [lines[0], cut(lines[1], cap - 1) + "…"];
   return lines;
 }
+
+/** Conservative shelf life (days) for a custom item that doesn't match the catalog. */
+export const CATEGORY_DAYS: Record<Category, number> = {
+  veg: 3,
+  fruit: 5,
+  meat: 2,
+  seafood: 1,
+  dairy_egg: 5,
+  drink: 7,
+  sauce: 30,
+  cooked: 3,
+  other: 3,
+};
+
+/** A tile/form item for a name the catalog doesn't know: category picture, category shelf life. */
+export const customItem = (name: string, category: Category, unit = "ชิ้น", zone: Zone = "chill"): CatalogItem => ({
+  id: `my:${name}`,
+  name,
+  aliases: [],
+  short: "",
+  category,
+  unit,
+  zone,
+  days: CATEGORY_DAYS[category],
+  freezerDays: null,
+});
+
+/** Typed name → the catalog item if it matches (its data + picture win), else a category-based custom item. */
+export const resolveCustom = (name: string, category: Category, unit?: string, zone?: Zone) =>
+  catalogMatch(name) ?? customItem(name.trim(), category, unit, zone);
+
+/** "ของฉัน": distinct lot names the catalog doesn't know; latest category/unit/zone (lots newest first). */
+export function myIngredients(lots: { name: string; category: Category; unit: string; zone: Zone }[]): CatalogItem[] {
+  const seen = new Map<string, CatalogItem>();
+  for (const l of lots) {
+    const k = norm(l.name);
+    if (!k || seen.has(k) || catalogMatch(l.name)) continue;
+    seen.set(k, customItem(l.name.trim(), l.category, l.unit, l.zone));
+  }
+  return [...seen.values()];
+}
+
+/** Sentinel tile: "+ กำหนดเอง" is dragged/tapped like an ingredient but opens the form in custom mode. */
+export const CUSTOM_TILE: CatalogItem = { ...customItem("กำหนดเอง", "other"), id: "custom" };

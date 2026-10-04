@@ -4,7 +4,7 @@ import manifest from "@/lib/ingredients-manifest.json";
 const FILES = manifest as Record<string, "svg" | "png">;
 
 // Block colours only (never status). Ink on bg ≥ 6.4:1.
-const COLORS: Record<Category, [bg: string, ink: string]> = {
+export const COLORS: Record<Category, [bg: string, ink: string]> = {
   veg: ["#D9F2D4", "#1F5A2A"],
   fruit: ["#FFE2C4", "#7A3A05"],
   meat: ["#FADCD3", "#7E2A16"],

@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { ChevronDown, ChevronRight, Plus, Search } from "lucide-react";
 import { IngredientPicture } from "@/components/IngredientPicture";
-import { CATALOG, type CatalogItem } from "@/lib/catalog";
+import { CATALOG, CUSTOM_TILE, type CatalogItem } from "@/lib/catalog";
 import { CATEGORIES } from "@/lib/inventory";
 
 export type TileHandlers = {
@@ -12,6 +12,7 @@ export type TileHandlers = {
   onPointerLeave: () => void;
   onClick: (e: React.MouseEvent<HTMLElement>, cat: CatalogItem) => void;
   onPlus: (cat: CatalogItem) => void;
+  onCustom: (name: string) => void;
 };
 
 const norm = (s: string) => s.trim().toLowerCase();
@@ -27,6 +28,7 @@ export function SideBar({
   liftedId,
   armedId,
   tiles,
+  mine,
 }: {
   collapsed: boolean;
   setCollapsed: (v: boolean) => void;
@@ -34,6 +36,7 @@ export function SideBar({
   liftedId: string | null;
   armedId: string | null;
   tiles: TileHandlers;
+  mine: CatalogItem[];
 }) {
   // Sheet state lives here so opening/closing re-renders only the bar, not the whole home.
   const [sheet, setSheet] = useState<"peek" | "expanded">("peek");
@@ -43,10 +46,12 @@ export function SideBar({
   const sheetRef = useRef<HTMLElement>(null);
   const grab = useRef<{ y: number; dy: number } | null>(null);
 
-  const shown = useMemo(
-    () => CATALOG.filter((c) => (cat === "all" || c.category === cat) && (!q.trim() || [c.name, ...c.aliases].some((n) => norm(n).includes(norm(q))))),
-    [cat, q],
-  );
+  const shown = useMemo(() => {
+    const pool = cat === "mine" ? mine : cat === "all" ? [...mine, ...CATALOG] : CATALOG.filter((c) => c.category === cat);
+    return pool.filter((c) => !q.trim() || [c.name, ...c.aliases].some((n) => norm(n).includes(norm(q))));
+  }, [cat, q, mine]);
+  // the action tile leads the grid unless a search or the "ของฉัน" view is narrowing it
+  const tilesShown = useMemo(() => (cat === "all" && !q.trim() ? [CUSTOM_TILE, ...shown] : shown), [cat, q, shown]);
   const expanded = sheet === "expanded";
 
   // Grabber drag: follow the finger with translateY only, then snap to the nearer state.
@@ -79,18 +84,17 @@ export function SideBar({
   const grid = useMemo(
     () => (
       <ul className="flex min-h-0 flex-1 gap-2.5 overflow-x-auto overscroll-contain px-3 pb-4 pt-2.5 group-data-[sheet=expanded]:grid group-data-[sheet=expanded]:grid-cols-3 group-data-[sheet=expanded]:content-start group-data-[sheet=expanded]:overflow-y-auto lg:grid lg:grid-cols-3 lg:content-start lg:overflow-y-auto">
-        {shown.map((c) => (
+        {tilesShown.map((c) => (
           <li key={c.id} className="relative max-lg:group-data-[sheet=peek]:w-[84px] max-lg:group-data-[sheet=peek]:shrink-0">
             <div
               role="button"
               tabIndex={0}
-              aria-label={`${c.name} ดูรายละเอียด`}
-              aria-expanded={openKey === `cat:${c.id}`}
-              aria-controls="details"
+              aria-label={c === CUSTOM_TILE ? "กำหนดวัตถุดิบเอง" : `${c.name} ดูรายละเอียด`}
+              {...(c === CUSTOM_TILE ? {} : { "aria-expanded": openKey === `cat:${c.id}`, "aria-controls": "details" })}
               data-lifted={liftedId === c.id || undefined}
               data-armed={armedId === c.id || undefined}
               onPointerDown={(e) => tiles.onPointerDown(e, c)}
-              onPointerEnter={(e) => tiles.onPointerEnter(e, c)}
+              onPointerEnter={(e) => c !== CUSTOM_TILE && tiles.onPointerEnter(e, c)}
               onPointerLeave={tiles.onPointerLeave}
               onClick={(e) => tiles.onClick(e, c)}
               onKeyDown={(e) => {
@@ -100,13 +104,23 @@ export function SideBar({
                 }
               }}
               onContextMenu={(e) => e.preventDefault()}
-              className="tile aspect-square w-full cursor-grab touch-pan-x group-data-[sheet=expanded]:touch-pan-y lg:touch-pan-y"
+              className={`tile aspect-square w-full cursor-grab ${c === CUSTOM_TILE ? "!border-dashed" : ""} touch-pan-x touch-pan-x group-data-[sheet=expanded]:touch-pan-y lg:touch-pan-y`}
             >
               {/* sticker fills ~85% of the well; the name sits below the tile, never on the picture */}
               {/* all sizes rendered, CSS picks one, so opening the sheet changes no DOM */}
-              <IngredientPicture name={c.name} category={c.category} size={64} className="max-lg:group-data-[sheet=expanded]:hidden lg:hidden" />
-              <IngredientPicture name={c.name} category={c.category} size={96} className="max-lg:group-data-[sheet=peek]:hidden lg:hidden" />
-              <IngredientPicture name={c.name} category={c.category} size={80} className="max-lg:hidden" />
+              {c === CUSTOM_TILE ? (
+                <span className="grid h-full place-items-center">
+                  <span className="grid size-[55%] place-items-center rounded-full border-2 border-outline bg-[var(--candy-green)] text-outline">
+                    <Plus className="size-2/3" strokeWidth={3.5} aria-hidden="true" />
+                  </span>
+                </span>
+              ) : (
+                <>
+                  <IngredientPicture name={c.name} category={c.category} size={64} className="max-lg:group-data-[sheet=expanded]:hidden lg:hidden" />
+                  <IngredientPicture name={c.name} category={c.category} size={96} className="max-lg:group-data-[sheet=peek]:hidden lg:hidden" />
+                  <IngredientPicture name={c.name} category={c.category} size={80} className="max-lg:hidden" />
+                </>
+              )}
             </div>
             <span
               aria-hidden="true"
@@ -114,6 +128,7 @@ export function SideBar({
             >
               {c.name}
             </span>
+            {c !== CUSTOM_TILE && (
             <button
               type="button"
               data-plus
@@ -123,11 +138,12 @@ export function SideBar({
             >
               <Plus className="size-3.5" strokeWidth={3.5} aria-hidden="true" />
             </button>
+            )}
           </li>
         ))}
       </ul>
     ),
-    [shown, openKey, liftedId, armedId, tiles],
+    [tilesShown, openKey, liftedId, armedId, tiles],
   );
 
   return (
@@ -178,6 +194,7 @@ export function SideBar({
             className="btn-candy btn-cream !h-11 !min-h-11 max-w-[9.5rem] appearance-none truncate !pl-4 !pr-9 !text-base after:hidden"
           >
             <option value="all">ทั้งหมด</option>
+            {mine.length > 0 && <option value="mine">ของฉัน</option>}
             {Object.entries(CATEGORIES).map(([v, l]) => (
               <option key={v} value={v}>
                 {l}
@@ -203,11 +220,18 @@ export function SideBar({
       </p>
 
       {shown.length === 0 ? (
-        <div className="flex items-center gap-3 px-4 py-3">
-          <p>ไม่เจอ “{q}”</p>
-          <button type="button" className="chip !min-h-9" onClick={() => setQ("")}>
-            ล้างคำค้น
-          </button>
+        <div className="flex flex-wrap items-center gap-3 px-4 py-3">
+          <p>{q.trim() ? `ไม่เจอ “${q}”` : "ยังไม่มีของของฉัน"}</p>
+          {q.trim() && (
+            <>
+              <button type="button" className="chip !min-h-9" onClick={() => setQ("")}>
+                ล้างคำค้น
+              </button>
+              <button type="button" className="chip !min-h-9" onClick={() => tiles.onCustom(q.trim().slice(0, 60))}>
+                + เพิ่ม “{q.trim()}” เอง
+              </button>
+            </>
+          )}
         </div>
       ) : (
         grid

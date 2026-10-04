@@ -2,11 +2,11 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { Minus, Plus, X } from "lucide-react";
-import { IngredientPicture } from "@/components/IngredientPicture";
+import { COLORS, IngredientPicture } from "@/components/IngredientPicture";
 import { Notice } from "@/components/auth/Notice";
 import { PendingButton } from "@/components/inventory/PendingButton";
 import { addLotFromHome, type AddState } from "@/app/(app)/fridge/actions";
-import { guessExpiry, shelfDays, type CatalogItem, type Zone } from "@/lib/catalog";
+import { catalogMatch, guessExpiry, resolveCustom, shelfDays, type Category, type CatalogItem, type Zone } from "@/lib/catalog";
 import { CATEGORIES, UNITS, ZONES } from "@/lib/inventory";
 import { thaiDate } from "@/lib/expiry";
 import { minusDays } from "@/lib/history";
@@ -24,7 +24,8 @@ const QUICK = [
 
 /** Short add form (§6): native <dialog>, preset zone, guessed expiry from catalog shelf life. */
 export function AddDialog({
-  cat,
+  cat: cat0,
+  customName,
   zone: zone0,
   today,
   items,
@@ -32,6 +33,8 @@ export function AddDialog({
   onSaved,
 }: {
   cat: CatalogItem;
+  /** Set = custom mode (free-text name, prefilled with this). */
+  customName?: string;
   zone: Zone;
   today: string;
   items: HomeItem[];
@@ -44,6 +47,14 @@ export function AddDialog({
   const [qty, setQty] = useState(1);
   const [bought, setBought] = useState(today);
   const [manual, setManual] = useState<string | null>(null);
+  // Custom mode: a name that matches the catalog switches to that item's data + picture.
+  const custom = customName !== undefined;
+  const [name, setName] = useState(customName ?? "");
+  const [catSel, setCatSel] = useState<Category>("other");
+  const [unitSel, setUnitSel] = useState<string | null>(null);
+  const cat = custom ? resolveCustom(name || "กำหนดเอง", catSel) : cat0;
+  const matched = custom && !!catalogMatch(name);
+  const unit = unitSel ?? cat.unit;
   const guess = guessExpiry(cat, zone, bought);
   const expires = manual ?? guess;
 
@@ -62,7 +73,7 @@ export function AddDialog({
   return (
     <dialog ref={ref} className="sheet" aria-labelledby="add-title" onClose={onClose}>
       <form action={action} className="flex flex-col gap-4 overflow-y-auto p-4 pb-[calc(16px+env(safe-area-inset-bottom))] lg:p-5">
-        <input type="hidden" name="name" value={cat.name} />
+        <input type="hidden" name="name" value={custom ? name.trim() : cat.name} />
         <input type="hidden" name="category" value={cat.category} />
         <input type="hidden" name="expiry_guessed" value={manual === null ? "1" : "0"} />
 
@@ -70,9 +81,9 @@ export function AddDialog({
           <IngredientPicture name={cat.name} category={cat.category} size={72} className="m-1.5" />
           <div className="min-w-0 flex-1">
             <h2 id="add-title" className="font-display text-[1.25rem] font-medium leading-tight text-outline">
-              เพิ่ม {cat.name}
+              {custom ? "เพิ่มวัตถุดิบเอง" : `เพิ่ม ${cat.name}`}
             </h2>
-            <p className="text-[0.9375rem] text-ink-2">{CATEGORIES[cat.category]}</p>
+            <p className="text-[0.9375rem] text-ink-2">{matched ? `ตรงกับ ${cat.name} ในรายการ` : CATEGORIES[cat.category]}</p>
           </div>
           <button
             type="button"
@@ -83,6 +94,35 @@ export function AddDialog({
             <X className="size-5" strokeWidth={3} aria-hidden="true" />
           </button>
         </div>
+
+        {custom && (
+          <>
+            <label className="flex flex-col gap-1.5 text-[0.9375rem] font-semibold">
+              ชื่อ
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                maxLength={60}
+                autoFocus
+                placeholder="เช่น ผักสลัดบ้านเรา"
+                className={`${field} w-full`}
+              />
+            </label>
+            <fieldset>
+              <legend className="mb-1.5 text-[0.9375rem] font-semibold">หมวด</legend>
+              <div className="flex flex-wrap gap-2">
+                {(Object.entries(CATEGORIES) as [Category, string][]).map(([v, l]) => (
+                  <label key={v} className="chip !min-h-10 cursor-pointer has-checked:bg-panel has-checked:text-white has-focus-visible:outline-3 has-focus-visible:outline-brand">
+                    <input type="radio" name="cat_pick" checked={cat.category === v} disabled={matched} onChange={() => setCatSel(v)} className="sr-only" />
+                    <span aria-hidden="true" className="size-4 rounded-full border-2" style={{ background: COLORS[v][0], borderColor: COLORS[v][1] }} />
+                    {l}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          </>
+        )}
 
         <fieldset>
           <legend className="mb-1.5 text-[0.9375rem] font-semibold">เก็บใน</legend>
@@ -138,11 +178,12 @@ export function AddDialog({
           </div>
           <label className="flex min-w-0 flex-1 flex-col gap-1.5 text-[0.9375rem] font-semibold">
             หน่วย
-            <select name="unit" defaultValue={cat.unit} className={`${field} w-full`}>
+            <input name="unit" list="add-units" value={unit} onChange={(e) => setUnitSel(e.target.value)} required maxLength={20} className={`${field} w-full`} />
+            <datalist id="add-units">
               {UNITS.map((u) => (
-                <option key={u}>{u}</option>
+                <option key={u} value={u} />
               ))}
-            </select>
+            </datalist>
           </label>
         </div>
 

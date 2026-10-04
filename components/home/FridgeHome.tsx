@@ -7,7 +7,7 @@ import { ChefHat, ChevronRight, CircleCheck, Clock, List, TriangleAlert } from "
 import { Notice } from "@/components/auth/Notice";
 import { IngredientPicture } from "@/components/IngredientPicture";
 import { ExpiryBadge } from "@/components/inventory/ExpiryBadge";
-import type { CatalogItem, Zone } from "@/lib/catalog";
+import { CUSTOM_TILE, type CatalogItem, type Zone } from "@/lib/catalog";
 import { thaiDate } from "@/lib/expiry";
 import { PLACES, flyCounts, groupItems, type HomeItem, type HomeLot, type Place } from "@/lib/home";
 import { AddDialog } from "./AddDialog";
@@ -42,6 +42,7 @@ export function FridgeHome({
   household,
   today,
   lots,
+  mine,
   canWrite,
   ai,
   reset,
@@ -50,6 +51,7 @@ export function FridgeHome({
   household: string;
   today: string;
   lots: HomeLot[];
+  mine: CatalogItem[];
   canWrite: boolean;
   ai: boolean;
   reset: boolean;
@@ -67,7 +69,7 @@ export function FridgeHome({
 
   const [spot, setSpot] = useState<"urgent" | "week" | null>(null);
   const [card, setCard] = useState<CardTarget | null>(null);
-  const [form, setForm] = useState<{ cat: CatalogItem; zone: Zone; n: number } | null>(null);
+  const [form, setForm] = useState<{ cat: CatalogItem; zone: Zone; n: number; name?: string } | null>(null);
   const [drag, setDrag] = useState<{ cat: CatalogItem; over: Drag["over"] } | null>(null);
   const [armed, setArmed] = useState<string | null>(null);
   const [popId, setPopId] = useState<string | null>(null);
@@ -243,7 +245,7 @@ export function FridgeHome({
     chillRef.current?.animate([{ transform: "translateY(2px)" }, { transform: "none" }], { duration: 140, easing: "ease-out" });
     const open = () => {
       setDrag(null);
-      setForm({ cat: g.cat, zone: over, n: Date.now() });
+      setForm({ cat: g.cat, zone: over, n: Date.now(), name: g.cat === CUSTOM_TILE ? "" : undefined });
     };
     if (!el) return open();
     el.animate([{ transform: "scale(1.08,.92)" }, { transform: "scale(1)" }], { duration: 160, easing: "cubic-bezier(.34,1.56,.64,1)" }).onfinish = open;
@@ -290,10 +292,25 @@ export function FridgeHome({
     window.addEventListener("keydown", onKey);
   };
 
-  const openForm = (cat: CatalogItem, zone: Zone = cat.zone) => {
+  const openForm = (cat: CatalogItem, zone: Zone = cat.zone, name?: string) => {
     setCard(null);
-    setForm({ cat, zone, n: Date.now() });
+    setForm({ cat, zone, n: Date.now(), name });
   };
+  const openCustom = (name = "") => openForm(CUSTOM_TILE, "chill", name);
+
+  // "+" opens the custom form (not while typing or with a dialog already open)
+  useEffect(() => {
+    if (!canWrite) return;
+    const key = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement;
+      if (e.key !== "+" || e.ctrlKey || e.metaKey || e.altKey || t.closest("input,textarea,select,dialog,[contenteditable]")) return;
+      e.preventDefault();
+      setCard(null);
+      setForm({ cat: CUSTOM_TILE, zone: "chill", n: Date.now(), name: "" });
+    };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [canWrite]);
   const onSaved = useCallback(
     (id: string, n: string) => {
       setPopId(id);
@@ -434,17 +451,20 @@ export function FridgeHome({
           openKey={card?.key ?? null}
           liftedId={drag?.cat.id ?? null}
           armedId={armed}
+          mine={mine}
           tiles={{
             onPointerDown: tileDown,
             onPointerEnter: (e, cat) => hoverIn(e, { mode: "cat", cat, key: `cat:${cat.id}` }),
             onPointerLeave: hoverOut,
             onClick: (e, cat) => {
               if (blockClick.current) return;
+              if (cat === CUSTOM_TILE) return openCustom();
               const key = `cat:${cat.id}`;
               const viaPointer = "detail" in e && e.detail > 0;
               toggle({ mode: "cat", cat, key, anchor: e.currentTarget, pinned: true, focus: !viaPointer || lastPointer.current !== "mouse" });
             },
             onPlus: (cat) => openForm(cat),
+            onCustom: openCustom,
           }}
         />
       )}
@@ -476,6 +496,7 @@ export function FridgeHome({
           key={form.n}
           cat={form.cat}
           zone={form.zone}
+          customName={form.name}
           today={today}
           items={items}
           onClose={() => setForm(null)}

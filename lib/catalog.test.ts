@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CATALOG, blockLabel, catalogMatch, guessExpiry, pictureId, shelfDays, spacingLength } from "./catalog";
+import { CATALOG, CATEGORY_DAYS, blockLabel, catalogMatch, customItem, guessExpiry, myIngredients, pictureId, resolveCustom, shelfDays, spacingLength } from "./catalog";
 import { homeTone } from "./expiry";
 import { flyCounts, groupItems, placeOf, type HomeLot } from "./home";
 import { dayLabel, groupByDay, minusDays } from "./history";
@@ -140,5 +140,25 @@ describe("history", () => {
     expect(dayLabel("2026-10-03", "2026-10-04")).toBe("เมื่อวาน");
     expect(dayLabel("2026-10-02", "2026-10-04")).toMatch(/2 ต\.ค\./);
     expect(minusDays("2026-03-01", 1)).toBe("2026-02-28");
+  });
+});
+
+describe("custom ingredients", () => {
+  it("has a conservative category shelf life that drives the guess", () => {
+    expect(CATEGORY_DAYS).toMatchObject({ veg: 3, fruit: 5, meat: 2, seafood: 1, dairy_egg: 5, drink: 7, sauce: 30, cooked: 3, other: 3 });
+    expect(guessExpiry(customItem("ผักสลัด", "veg"), "chill", "2026-10-04")).toBe("2026-10-07");
+  });
+
+  it("derives my ingredients: distinct, non-catalog, latest first", () => {
+    const l = (name: string, category: HomeLot["category"], unit: string, zone: HomeLot["zone"] = "chill") => ({ name, category, unit, zone });
+    const mine = myIngredients([l("ผักสลัดบ้านเรา", "veg", "ถุง"), l("ไข่ไก่", "dairy_egg", "ฟอง"), l("ผักสลัดบ้านเรา", "other", "กก."), l("แกงบ้านยาย", "cooked", "กล่อง", "freezer")]);
+    expect(mine.map((m) => m.name)).toEqual(["ผักสลัดบ้านเรา", "แกงบ้านยาย"]);
+    expect(mine[0]).toMatchObject({ category: "veg", unit: "ถุง", zone: "chill", days: 3 });
+    expect(mine[1].zone).toBe("freezer");
+  });
+
+  it("switches to the catalog item when the typed name matches", () => {
+    expect(resolveCustom("อกไก่ CP", "other").id).toBe("chicken");
+    expect(resolveCustom("ผักสลัดบ้านเรา", "veg")).toMatchObject({ id: "my:ผักสลัดบ้านเรา", category: "veg", days: 3 });
   });
 });
