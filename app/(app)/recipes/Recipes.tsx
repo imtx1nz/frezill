@@ -5,7 +5,7 @@ import { ChefHat, Clock, Gauge, Info, TriangleAlert } from "lucide-react";
 import { Notice } from "@/components/auth/Notice";
 import { PendingButton } from "@/components/inventory/PendingButton";
 import { IngredientPicture } from "@/components/IngredientPicture";
-import { ToneBadge, fmt } from "@/components/home/status";
+import { QtyBadge, ToneBadge, fmt } from "@/components/home/status";
 import { catalogMatch, type Category } from "@/lib/catalog";
 import type { HomeTone } from "@/lib/expiry";
 import { cookMenu } from "../fridge/actions";
@@ -52,7 +52,7 @@ export function Recipes({ known, today }: { known: Known; today: string }) {
               <ChefHat className="size-6" strokeWidth={2.5} />
             </span>
           </div>
-          <p className="max-w-[20rem] font-medium text-ink-2">กดปุ่มด้านบน แล้ว AI จะหยิบของในตู้มาคิดเป็นเมนูให้ ของใกล้หมดได้ไปก่อน</p>
+          <p className="max-w-[20rem] font-medium text-ink-2">กดปุ่มด้านบน แล้ว AI จะคิดเมนูจากของในตู้ให้</p>
         </section>
       )}
 
@@ -69,7 +69,7 @@ export function Recipes({ known, today }: { known: Known; today: string }) {
                   <span key={g.name} className={`relative ${j ? "-ml-3" : ""}`} style={{ zIndex: 4 - j }}>
                     <IngredientPicture name={g.name} category={cat(g.name)} size={56} />
                     {m.uses_urgent.includes(g.name) && known[g.name] && (
-                      <ToneBadge tone={known[g.name].tone} expiresAt={known[g.name].expires_at} today={today} className="absolute -right-2 -top-2" />
+                      <ToneBadge tone={known[g.name].tone} expiresAt={known[g.name].expires_at} today={today} className="absolute -left-2 -top-2" />
                     )}
                   </span>
                 ))}
@@ -90,12 +90,19 @@ export function Recipes({ known, today }: { known: Known; today: string }) {
               )}
               <ul className="mt-3 flex flex-col gap-1.5">
                 {m.ingredients.map((g) => (
-                  <li key={g.name} className="flex items-center gap-3">
-                    <IngredientPicture name={g.name} category={cat(g.name)} size={48} />
-                    <span className="min-w-0 flex-1">{g.name}</span>
-                    <span className="text-right text-[0.9375rem] text-ink-2">
-                      {fmt(g.qty)} {g.unit}
-                      {!g.inFridge && <span className="block">ของในครัว</span>}
+                  <li key={g.name} className="flex items-center gap-3 py-0.5">
+                    <span className="relative shrink-0 p-1" aria-hidden="true">
+                      <IngredientPicture name={g.name} category={cat(g.name)} size={48} />
+                      {g.inFridge && known[g.name] && (
+                        <ToneBadge tone={known[g.name].tone} expiresAt={known[g.name].expires_at} today={today} className="absolute -left-1 -top-1 z-[2]" />
+                      )}
+                      <QtyBadge n={g.qty} className="!-bottom-0.5 !-right-0.5" />
+                    </span>
+                    <span className="min-w-0 flex-1 leading-snug">
+                      <span className="block font-semibold">{g.name}</span>
+                      <span className="block text-[0.9375rem] text-ink-2">
+                        {fmt(g.qty)} {g.unit} · {g.inFridge ? "ในตู้" : "ของในครัว"}
+                      </span>
                     </span>
                   </li>
                 ))}

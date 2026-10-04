@@ -15,7 +15,7 @@ const COLORS: Record<Category, [bg: string, ink: string]> = {
   cooked: ["#DCEFE6", "#075F47"],
   other: ["#ECE9E4", "#45403A"],
 };
-const TYPE = { 48: [14, 14], 56: [16, 15], 64: [18, 16], 72: [20, 18], 96: [26, 22] } as const; // radius, font px
+const TYPE = { 48: [14, 14], 56: [16, 15], 64: [18, 16], 72: [20, 18], 80: [22, 19], 96: [26, 22] } as const; // radius, font px
 
 /** Art file path if one exists (from the build-time manifest, so no 404 probing), else null. */
 export function pictureFile(name: string, category: Category) {

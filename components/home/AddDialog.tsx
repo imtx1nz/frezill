@@ -9,12 +9,18 @@ import { addLotFromHome, type AddState } from "@/app/(app)/fridge/actions";
 import { guessExpiry, shelfDays, type CatalogItem, type Zone } from "@/lib/catalog";
 import { CATEGORIES, UNITS, ZONES } from "@/lib/inventory";
 import { thaiDate } from "@/lib/expiry";
+import { minusDays } from "@/lib/history";
 import type { HomeItem } from "@/lib/home";
 import { fmt } from "./status";
 
 const field =
   "h-11 min-w-0 appearance-none rounded-xl border-2 border-outline bg-white px-3 text-base text-ink outline-none shadow-[inset_0_3px_0_rgb(27_31_59/0.08),0_2px_0_var(--outline)] focus:shadow-[inset_0_3px_0_rgb(27_31_59/0.08),0_2px_0_var(--outline),0_0_0_4px_var(--brand-soft)] [&::-webkit-calendar-picker-indicator]:opacity-70";
-const step = "grid size-11 shrink-0 place-items-center rounded-xl border-2 border-outline bg-white text-outline shadow-[0_2px_0_var(--outline)] active:translate-y-0.5 active:shadow-none";
+const step = "grid size-10 shrink-0 place-items-center rounded-full border-2 border-outline text-outline shadow-[0_2px_0_var(--outline)] active:translate-y-0.5 active:shadow-none";
+const QUICK = [
+  { days: 3, label: "3 วัน" },
+  { days: 7, label: "1 สัปดาห์" },
+  { days: 30, label: "1 เดือน" },
+];
 
 /** Short add form (§6): native <dialog>, preset zone, guessed expiry from catalog shelf life. */
 export function AddDialog({
@@ -108,8 +114,9 @@ export function AddDialog({
             <label htmlFor="add-qty" className="text-[0.9375rem] font-semibold">
               จำนวน
             </label>
-            <div className="flex gap-1.5">
-              <button type="button" className={step} aria-label="ลดจำนวน" onClick={() => setQty((q) => Math.max(1, q - 1))}>
+            {/* in-place stepper "− n +"; the number stays typeable as a fallback */}
+            <div className="flex h-12 items-center gap-1 rounded-full border-[length:var(--ow-md)] border-outline bg-white px-1 shadow-[0_3px_0_var(--outline)]">
+              <button type="button" className={`${step} bg-cream`} aria-label="ลดจำนวน" onClick={() => setQty((q) => Math.max(1, q - 1))}>
                 <Minus className="size-5" strokeWidth={3} aria-hidden="true" />
               </button>
               <input
@@ -120,12 +127,11 @@ export function AddDialog({
                 min="0.001"
                 step="any"
                 required
-                autoFocus
                 value={qty}
                 onChange={(e) => setQty(Number(e.target.value))}
-                className={`${field} w-20 text-center tabular-nums`}
+                className="h-full w-14 min-w-0 appearance-none bg-transparent text-center font-display text-[1.375rem] font-semibold tabular-nums text-outline outline-none [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
-              <button type="button" className={step} aria-label="เพิ่มจำนวน" onClick={() => setQty((q) => q + 1)}>
+              <button type="button" className={`${step} bg-[var(--candy-green)]`} aria-label="เพิ่มจำนวน" onClick={() => setQty((q) => q + 1)}>
                 <Plus className="size-5" strokeWidth={3} aria-hidden="true" />
               </button>
             </div>
@@ -140,15 +146,28 @@ export function AddDialog({
           </label>
         </div>
 
-        <label className="flex flex-col gap-1.5 text-[0.9375rem] font-semibold">
-          <span>
-            วันหมดอายุ{" "}
-            <span className="font-medium text-ink-2">
-              {manual === null ? `≈ เดา จากอายุเก็บ ${shelfDays(cat, zone)} วัน` : "แก้เอง"}
-            </span>
-          </span>
-          <input name="expires_at" type="date" value={expires} onChange={(e) => setManual(e.target.value)} className={`${field} w-full`} />
-        </label>
+        <fieldset className="flex flex-col gap-2">
+          <legend className="mb-1.5 text-[0.9375rem] font-semibold">
+            ควรใช้ภายใน {expires && <span className="font-medium text-ink-2">หมด {thaiDate(expires)}</span>}
+          </legend>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" className="chip !min-h-10" aria-pressed={manual === null} onClick={() => setManual(null)}>
+              ≈ {shelfDays(cat, zone)} วัน
+            </button>
+            {QUICK.map((q) => {
+              const d = minusDays(bought, -q.days);
+              return (
+                <button key={q.days} type="button" className="chip !min-h-10" aria-pressed={manual === d} onClick={() => setManual(d)}>
+                  {q.label}
+                </button>
+              );
+            })}
+          </div>
+          <label className="flex items-center gap-2 text-[0.9375rem] font-medium text-ink-2">
+            หรือเลือกวัน
+            <input name="expires_at" type="date" value={expires} onChange={(e) => setManual(e.target.value)} className={`${field} flex-1`} />
+          </label>
+        </fieldset>
         <label className="flex flex-col gap-1.5 text-[0.9375rem] font-semibold">
           วันที่ซื้อ
           <input

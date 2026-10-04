@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { IngredientPicture } from "@/components/IngredientPicture";
-import { ToneBadge } from "@/components/home/status";
+import { QtyBadge, ToneBadge } from "@/components/home/status";
 import { todayIn } from "@/lib/expiry";
 import { groupItems, type HomeLot } from "@/lib/home";
 import { Recipes, type Known } from "./Recipes";
@@ -29,7 +29,7 @@ export default async function RecipesPage() {
     <main className="mx-auto flex w-full max-w-[640px] flex-1 flex-col gap-5 px-4 pb-10 pt-5">
       <header>
         <h1 className="font-display text-[1.75rem] font-semibold leading-[1.15] tracking-[-0.01em] lg:text-[2.25rem]">เมนูจากของในตู้</h1>
-        <p className="text-ink-2">AI ช่วยคิด ใช้ของที่ต้องรีบใช้ก่อน</p>
+        <p className="text-ink-2">AI ช่วยคิดว่าวันนี้ทำอะไรกินดี</p>
       </header>
       {soon.length > 0 && (
         <section aria-label="ต้องรีบใช้">
@@ -39,7 +39,8 @@ export default async function RecipesPage() {
               <li key={i.key} className="relative shrink-0 p-1.5" aria-label={i.soon.name}>
                 <IngredientPicture name={i.soon.name} category={i.soon.category} size={56} className="lg:hidden" />
                 <IngredientPicture name={i.soon.name} category={i.soon.category} size={96} className="max-lg:hidden" />
-                <ToneBadge tone={i.tone} expiresAt={i.soon.expires_at} today={today} className="absolute -right-1 -top-1 z-[1]" />
+                <ToneBadge tone={i.tone} expiresAt={i.soon.expires_at} today={today} className="absolute -left-1 -top-1 z-[2]" />
+                <QtyBadge n={i.total} className="!bottom-0 !right-0" />
                 <span className="sr-only">{i.soon.name}</span>
               </li>
             ))}

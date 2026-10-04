@@ -114,7 +114,7 @@ const COMBINING = /[ัิ-ฺ็-๎]/u;
 /** Count of characters that take horizontal space. */
 export const spacingLength = (s: string) => [...s].filter((c) => !COMBINING.test(c)).length;
 
-const CAP = { 48: 5, 56: 5, 64: 6, 72: 6, 96: 7 } as const;
+const CAP = { 48: 5, 56: 5, 64: 6, 72: 6, 80: 6, 96: 7 } as const;
 export type PictureSize = keyof typeof CAP;
 
 /** Cut `s` to at most `n` spacing chars without splitting a grapheme. */

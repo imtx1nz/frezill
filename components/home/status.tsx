@@ -48,6 +48,15 @@ export function StatusRow({ tone, expiresAt, today }: { tone: HomeTone; expiresA
   );
 }
 
+/** Fixed slot: quantity, bottom-right of an item picture (expiry badge is top-left). */
+export function QtyBadge({ n, className = "" }: { n: number; className?: string }) {
+  return (
+    <span aria-hidden="true" className={`badge absolute -bottom-1.5 -right-1.5 z-[2] bg-cream !px-1.5 text-outline ${className}`}>
+      {fmt(n)}
+    </span>
+  );
+}
+
 /** Round outlined badge for a fridge item: nothing when calm. */
 export function ToneBadge({ tone, expiresAt, today, className = "" }: { tone: HomeTone; expiresAt: string | null; today: string; className?: string }) {
   if (tone === "fresh" || tone === "none" || !expiresAt) return null;

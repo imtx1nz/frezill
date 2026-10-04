@@ -61,7 +61,7 @@ export function SideBar({
     const el = sheetRef.current;
     if (!g || !el) return;
     g.dy = e.clientY - g.y;
-    const travel = el.offsetHeight - 172; // --peek
+    const travel = el.offsetHeight - parseFloat(getComputedStyle(el).getPropertyValue("--peek"));
     const base = expanded ? 0 : travel;
     el.style.transition = "none";
     el.style.translate = `0 ${Math.min(Math.max(base + g.dy, 0), travel)}px`; // inline wins over the class
@@ -163,7 +163,7 @@ export function SideBar({
           }`}
         >
           {shown.map((c) => (
-            <li key={c.id} className={`relative ${expanded ? "" : "max-lg:w-20 max-lg:shrink-0"}`}>
+            <li key={c.id} className={`relative ${expanded ? "" : "max-lg:w-[84px] max-lg:shrink-0"}`}>
               <div
                 role="button"
                 tabIndex={0}
@@ -183,18 +183,21 @@ export function SideBar({
                   }
                 }}
                 onContextMenu={(e) => e.preventDefault()}
-                className={`tile aspect-square w-full cursor-grab gap-1 ${expanded ? "touch-pan-y" : "touch-pan-x"} lg:touch-pan-y`}
+                className={`tile aspect-square w-full cursor-grab ${expanded ? "touch-pan-y" : "touch-pan-x"} lg:touch-pan-y`}
               >
+                {/* sticker fills ~85% of the well; the name sits below the tile, never on the picture */}
                 {expanded ? (
-                  <IngredientPicture name={c.name} category={c.category} size={56} className="mt-1.5" />
+                  <IngredientPicture name={c.name} category={c.category} size={96} />
                 ) : (
                   <>
-                    <IngredientPicture name={c.name} category={c.category} size={48} className="mt-1 lg:hidden" />
-                    <IngredientPicture name={c.name} category={c.category} size={56} className="mt-1.5 max-lg:hidden" />
+                    <IngredientPicture name={c.name} category={c.category} size={64} className="lg:hidden" />
+                    <IngredientPicture name={c.name} category={c.category} size={80} className="max-lg:hidden" />
                   </>
                 )}
-                <span className="w-full truncate px-1.5 text-center text-[0.875rem] font-semibold leading-tight">{c.name}</span>
               </div>
+              <span aria-hidden="true" className={`mt-1.5 block text-center text-[0.875rem] font-semibold leading-[1.2] text-white ${expanded ? "line-clamp-2" : "truncate lg:line-clamp-2 lg:whitespace-normal"}`}>
+                {c.name}
+              </span>
               <button
                 type="button"
                 data-plus

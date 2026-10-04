@@ -307,14 +307,13 @@ export function FridgeHome({
     [router],
   );
 
-  const spotChip = (key: "urgent" | "week", n: number, Icon: typeof Clock, label: string, ink: string) => (
-    <button
-      type="button"
-      aria-pressed={spot === key}
-      onClick={() => setSpot(spot === key ? null : key)}
-      className={`chip on-wall ${spot === key ? "" : ink}`}
-    >
-      <Icon className="size-4.5" strokeWidth={2.5} aria-hidden="true" /> {label} {n}
+  // Stat row: round outlined icon badge + bold number + short label; tap spotlights those items.
+  const stat = (key: "urgent" | "week", n: number, Icon: typeof Clock, label: string, tone: string) => (
+    <button type="button" aria-pressed={spot === key} onClick={() => setSpot(spot === key ? null : key)} className="stat on-wall">
+      <span className={`stat-icon ${tone}`}>
+        <Icon className="size-5" strokeWidth={2.5} aria-hidden="true" />
+      </span>
+      <b className="stat-n">{n}</b> {label}
     </button>
   );
   const firstUp = urgent.slice(0, 5);
@@ -351,21 +350,24 @@ export function FridgeHome({
 
       <div className="flex flex-col gap-3 lg:[grid-area:chips]">
         {reset && <Notice tone="success">ตั้งรหัสผ่านใหม่เรียบร้อยแล้ว</Notice>}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-x-3 gap-y-1">
           {urgent.length + week.length === 0 ? (
-            <p className="chip text-brand-ink">
-              <CircleCheck className="size-4.5" strokeWidth={2.5} aria-hidden="true" /> ตู้นี้สดทั้งหมด
+            <p className="stat">
+              <span className="stat-icon bg-brand-soft text-brand-ink">
+                <CircleCheck className="size-5" strokeWidth={2.5} aria-hidden="true" />
+              </span>
+              ตู้นี้สดทั้งหมด
             </p>
           ) : (
             <>
-              {urgent.length > 0 && spotChip("urgent", urgent.length, TriangleAlert, "ต้องรีบใช้", "text-urgent-ink")}
-              {week.length > 0 && spotChip("week", week.length, Clock, "ภายในสัปดาห์", "text-week-ink")}
+              {urgent.length > 0 && stat("urgent", urgent.length, TriangleAlert, "ต้องรีบใช้", "bg-urgent-soft text-urgent-ink")}
+              {week.length > 0 && stat("week", week.length, Clock, "ภายในสัปดาห์", "bg-week-soft text-week-ink")}
             </>
           )}
         </div>
       </div>
 
-      {ai && urgent.length > 0 && (
+      {ai && items.length > 0 && (
         <Link
           href="/recipes"
           className="card-game on-wall flex items-center gap-3 px-3 py-2.5 hover:-translate-y-0.5 lg:[grid-area:ai]"
@@ -374,8 +376,8 @@ export function FridgeHome({
             <ChefHat className="size-6" strokeWidth={2.5} aria-hidden="true" />
           </span>
           <span className="min-w-0 leading-snug">
-            <span className="block font-semibold">มีของต้องรีบใช้ {urgent.length} อย่าง</span>
-            <span className="block text-[0.9375rem] text-ink-2">ให้ AI คิดเมนูจากของพวกนี้ ›</span>
+            <span className="block font-semibold">ให้ AI คิดเมนูจากของในตู้</span>
+            <span className="block text-[0.9375rem] text-ink-2">ตอนนี้มี {items.length} อย่าง ทำอะไรกินดี ›</span>
           </span>
         </Link>
       )}

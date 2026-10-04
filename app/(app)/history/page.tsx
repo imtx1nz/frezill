@@ -198,19 +198,25 @@ export default async function HistoryPage({ searchParams }: PageProps<"/history"
                     const { label, cls, Icon } = PILL[e.kind];
                     const body = (
                       <>
-                        <IngredientPicture name={e.name} category={e.category as Category} size={48} className="relative z-[1]" />
+                        <span className="relative z-[1] shrink-0" aria-hidden="true">
+                          <IngredientPicture name={e.name} category={e.category as Category} size={48} />
+                          {e.kind !== "finish" && (
+                            <span className="badge absolute -bottom-2.5 -right-2.5 z-[2] !h-[18px] bg-cream !px-1 !text-[0.75rem] text-outline">
+                              {e.kind === "add" ? "+" : "−"}
+                              {fmt(e.qty)}
+                            </span>
+                          )}
+                        </span>
                         <span className="min-w-0 flex-1">
                           <span className="flex items-baseline justify-between gap-2">
-                            <span className="min-w-0 truncate">
-                              <b className="font-semibold">{e.name}</b> {verb(e)}
-                            </span>
+                            <b className="min-w-0 truncate font-semibold">{e.name}</b>
                             <span className="shrink-0 text-[0.9375rem] tabular-nums text-ink-2">{time(e.at)}</span>
                           </span>
-                          <span className="mt-0.5 flex items-center gap-1.5 text-[0.9375rem] text-ink-2">
-                            <span className={`inline-flex items-center gap-1 rounded-full px-2 text-[0.875rem] font-semibold ${cls}`}>
-                              <Icon className="size-3.5" strokeWidth={2.5} aria-hidden="true" /> {label}
+                          <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[0.9375rem] text-ink-2">
+                            <span title={label} className={`grid size-5 place-items-center rounded-full ${cls}`}>
+                              <Icon className="size-3.5" strokeWidth={2.5} aria-hidden="true" />
                             </span>
-                            · {e.who}
+                            {verb(e)} · {e.who}
                           </span>
                           {e.reason && <span className="mt-0.5 block text-[0.9375rem] text-ink-2">“{e.reason}”</span>}
                         </span>

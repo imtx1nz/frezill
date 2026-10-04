@@ -59,11 +59,11 @@ export function normalize(menus: z.infer<typeof menuSchema>[], items: Item[]): M
 export function buildPrompt(items: Item[], diet?: string) {
   const list = items.map((i) => `- ${i.name} (${i.qty} ${i.unit})${i.urgent ? " [urgent]" : ""}`).join("\n");
   return `คุณคือผู้ช่วยทำอาหารไทยในบ้าน เสนอเมนูง่าย ๆ 3 เมนูจากของในตู้เย็นนี้
-ของในตู้เย็น (ชื่อ (จำนวนที่มี หน่วย)) ของที่มี [urgent] ใกล้หมดอายุ ต้องใช้ก่อน:
+ของในตู้เย็น (ชื่อ (จำนวนที่มี หน่วย)) ของที่มี [urgent] คือใกล้หมดอายุ:
 ${list}
 ของในครัวที่มีเสมอ: ${PANTRY.join(", ")}
 ${diet ? `ข้อจำกัดด้านอาหาร: ${diet}\n` : ""}กติกา:
-- ทุกเมนูควรใช้ของ [urgent] อย่างน้อย 1 อย่าง ถ้ามี และใส่ชื่อของ [urgent] ที่ใช้ใน uses_urgent
+- คิดเมนูจากของอะไรก็ได้ในตู้ ไม่จำเป็นต้องใช้ของ [urgent] ถ้าใส่ของ [urgent] ได้อย่างลงตัวก็ดี และใส่ชื่อของ [urgent] ที่ใช้ใน uses_urgent (ไม่ได้ใช้ก็ให้เป็น [])
 - ingredients ใช้ชื่อให้ตรงกับรายการด้านบนทุกตัวอักษร ใช้หน่วยเดียวกับในตู้ และ qty ไม่เกินที่มี
 - ของที่ไม่มีในตู้และไม่ใช่ของในครัว ใส่ใน missing เท่านั้น (ไม่เกิน 2 อย่าง)
 - difficulty เป็น "ง่าย" "ปานกลาง" หรือ "ยาก" · minutes เป็นจำนวนเต็ม · steps สั้น กระชับ ไม่เกิน 8 ขั้น
@@ -104,7 +104,7 @@ const responseSchema = {
   },
 };
 
-/** Server only. 3 menus that use urgent items first, or an error: "quota" = every model hit its daily 429, "busy" = anything else. Worst case ~25s. */
+/** Server only. 3 menus from anything in the fridge (urgent items are a bonus), or an error: "quota" = every model hit its daily 429, "busy" = anything else. Worst case ~25s. */
 export async function suggestMenus(items: Item[], diet?: string): Promise<{ menus: Menu[] } | { error: "quota" | "busy" }> {
   const key = process.env.GEMINI_API_KEY?.trim(); // Vercel value had a leading \r
   if (!key) return { error: "busy" };

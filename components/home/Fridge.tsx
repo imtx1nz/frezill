@@ -5,7 +5,7 @@ import { ArrowDown, ArrowRight } from "lucide-react";
 import { IngredientPicture, pictureFile } from "@/components/IngredientPicture";
 import type { HomeItem, Place } from "@/lib/home";
 import { Flies } from "./Flies";
-import { ToneBadge, fmt, statusText } from "./status";
+import { QtyBadge, ToneBadge, fmt, statusText } from "./status";
 
 export type ItemHandlers = {
   onPointerDown: (e: React.PointerEvent) => void;
@@ -176,20 +176,13 @@ function Item({ item, small, ...p }: Props & { item: HomeItem; small: boolean })
       {art && (
         <span
           aria-hidden="true"
-          className="chip absolute bottom-0.5 left-1/2 z-[1] block !min-h-0 max-w-[calc(100%-4px)] -translate-x-1/2 truncate !px-1.5 !text-[0.75rem] !leading-[1.2]"
+          className="chip absolute bottom-0.5 left-0.5 z-[1] block !min-h-0 max-w-[calc(100%-30px)] truncate !px-1.5 !text-[0.75rem] !leading-[1.2]"
         >
           {l.name}
         </span>
       )}
-      <ToneBadge tone={item.tone} expiresAt={l.expires_at} today={p.today} className="absolute -right-1.5 -top-1.5 z-[2] !h-[18px] !gap-px !pl-0.5 !pr-1 !text-[0.75rem] [&>svg]:size-3" />
-      {item.lots.length > 1 && (
-        <span
-          aria-hidden="true"
-          className="absolute -bottom-1.5 -left-1.5 z-[2] grid h-5 min-w-5 place-items-center rounded-full border-2 border-outline bg-cream px-1 text-[0.875rem] font-semibold leading-none text-outline"
-        >
-          {item.lots.length}
-        </span>
-      )}
+      <ToneBadge tone={item.tone} expiresAt={l.expires_at} today={p.today} className="absolute -left-1.5 -top-1.5 z-[2] !h-[18px] !gap-px !pl-0.5 !pr-1 !text-[0.75rem] [&>svg]:size-3" />
+      <QtyBadge n={item.total} className="!h-[18px] !text-[0.75rem]" />
       {flies && <Flies n={flies} />}
     </button>
   );

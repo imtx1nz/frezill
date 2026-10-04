@@ -55,7 +55,7 @@
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
   --tabbar-h: calc(64px + env(safe-area-inset-bottom));
-  --peek: 172px;
+  --peek: 196px;
 }
 
 @theme inline {
@@ -246,6 +246,41 @@ a {
     color: #fff;
     box-shadow: none;
     transform: translateY(2px);
+  }
+
+  /* Header stat: round outlined icon badge + bold number + short label (on the wall) */
+  .stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 48px;
+    padding: 0 14px 0 4px;
+    border-radius: 999px;
+    border: var(--ow-sm) solid transparent;
+    color: var(--ink);
+    font-weight: 500;
+    transition: transform 80ms var(--ease-out);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .stat[aria-pressed="true"] {
+    background: var(--cream);
+    border-color: var(--outline);
+    box-shadow: 0 2px 0 var(--outline);
+  }
+  .stat-icon {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    border: var(--ow-sm) solid var(--outline);
+    box-shadow: 0 2px 0 var(--outline);
+  }
+  .stat-n {
+    font: 600 1.5rem/1 var(--font-display);
+    font-variant-numeric: tabular-nums;
+    margin-left: 2px;
   }
 
   /* Status badge: round icon + count in one outlined pill */
