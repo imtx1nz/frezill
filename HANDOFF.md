@@ -3,7 +3,7 @@
 ## เป้าหมาย
 เว็บแอป (PWA) ตู้เย็นที่คนในบ้านใช้ร่วมกัน เตือนก่อนของหมดอายุ และ AI เสนอเมนูจากของในตู้ · กฎการพัฒนา: `.claude/skills/frezill-dev/SKILL.md` · สเปก UI: `docs/design/fridge-home.md` · แผนเต็ม: `PROJECT_PLAN.md`
 
-## สถานะตอนนี้ (live: https://frezill.vercel.app, main = `d11f88e`, deploy แล้ว 2026-10-04 เย็น)
+## สถานะตอนนี้ (live: https://frezill.vercel.app, main = `69b808b`)
 - ✅ M0–M5 ขึ้น production และทดสอบด้วย Playwright + บัญชี QA แล้ว: auth (อีเมล+Google), เพิ่ม/ลด/แก้/ทิ้ง/ลบของ, FEFO, วันหมดอายุ+สถานะ, วันที่ซื้อ (`bought_on`, ว่าง = วันนี้), AI เมนู 3 อย่าง + "ทำเมนูนี้แล้ว" + จำกัด 10 ครั้ง/บ้าน/วัน
 - ✅ UI ใหม่ "Fridge Home" (แนวเกม Cookie Run + แถบข้างแบบ Tinkercad + glass) ขึ้น production แล้ว (`eac617b`): แท็บ 3 อัน ตู้เย็น/ประวัติ/AI, ตู้ 2.5D มีของจริงบนชั้น, แถบวัตถุดิบ 30 อย่าง (มือถือ = bottom sheet), การ์ดรายละเอียด (hover/แตะ), ลากเข้าตู้ (มือถือกดค้าง) → ฟอร์มสั้นมีชิปวันหมดอายุ + "− n +", แมลงวันบนของ ≤3 วัน/หมดอายุ (ไม่เกิน 6 ตัว), หน้า `/history`, `/recipes` แต่งใหม่
   - ผ่าน Reviewer 1 รอบ + แก้ครบ P1–P3 + 5 ท่าจาก Glovo (ป้ายวันซ้ายบน/จำนวนขวาล่าง, ชื่อใต้ช่อง, แถวตัวเลขบนหัว, − n +, ชิปวันหมดอายุ)
@@ -14,27 +14,19 @@
 - ✅ ล็อกชื่อของมาตรฐาน 30 อย่าง (ฟอร์ม+หน้าแก้ไข+กันที่ server, `isLockedName`) + กฎใน skill ห้ามเปลี่ยน id/ชื่อ (`97f29d1`)
 - ✅ การ์ดเมนู AI ละเอียดขึ้น (`d11f88e`): วัตถุดิบมีรูป+ปริมาณตัวหนา (รวมของในครัว), ขั้นตอนเป็น `{text, action, heat?, minutes?}` มีไอคอน `public/steps/*.svg` (Fluent Flat) + ชิปไฟ/เวลา · สตริงขั้นตอนแบบเก่ายังรับได้ · **ยังไม่ได้ลองกับ Gemini จริง** (โควตาหมดวันนั้น)
 - 🗒️ ข้อมูล: ของในตู้ผู้ใช้ชื่อ "ไส้กรอกห" (พิมพ์ผิด) → ผู้ใช้แก้เองในหน้าแก้ไข
-- 🚧 กำลังทำ (agent ใน worktree แยก):
-  - `settings-email` (Opus): เมนู ≡ → หน้า `/settings` (สวิตช์อีเมลแจ้งเตือน, เตือนล่วงหน้า 1–3 วัน, ส่งเมลทดสอบ) + ปุ่มออกจากระบบล่างสุด + cron ทุกวัน 08:00 (`0 1 * * *` UTC) `app/api/cron/notify` ส่งผ่าน **Brevo** HTTP API · migration `0005_notify_settings.sql` · ผู้ใช้ต้องตั้ง: Brevo (sender+API key v3) → Vercel env `BREVO_API_KEY`, `MAIL_FROM`, `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET` → รัน 0005 → deploy → กดส่งเมลทดสอบ
-  - `sheet-75` (Sonnet): แผงวัตถุดิบบนมือถือเหลือ 75% (desktop เหมือนเดิม)
-  - เมื่อเสร็จ: rebase บน main ใน worktree → test+tsc → ผู้ใช้ merge+deploy
-- ✅ AI: คิดเมนูจาก**ของอะไรก็ได้ในตู้** (ของใกล้หมดเป็นโบนัส ไม่บังคับ) · โมเดลสำรองเมื่อโควตาหมด
-- ✅ ตารางอายุเก็บใน `lib/catalog.ts` ใช้ค่าฝั่งปลอดภัยจากตารางที่ผู้ใช้ให้ (หมูสับ 1 วัน, หมูชิ้น 3, ผักใบ 3, กะหล่ำ/แครอท 7, พริก/มะนาว 14, ไข่ 21 ไม่แช่แข็ง)
-
-## ตั้งค่าอีเมล (branch `settings-email`: เมนู ≡ + หน้า /settings + อีเมลเตือนของใกล้หมดทุกเช้า 08:00)
-1. สมัคร brevo.com → Senders → เพิ่มอีเมลผู้ส่งแล้วกดยืนยันในอีเมล
-2. SMTP & API → API Keys → สร้าง key v3
-3. ใส่ env ใน Vercel Production (`npx vercel env add <NAME> production`): `BREVO_API_KEY`, `MAIL_FROM` (เช่น `frezill <you@gmail.com>` ต้องเป็นอีเมลที่ยืนยันแล้ว), `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Settings → API → service_role), `CRON_SECRET` (สุ่ม: `openssl rand -hex 32`)
-4. รัน migration `supabase/migrations/0005_notify_settings.sql`
-5. merge + deploy
-6. เปิด /settings กด "ส่งอีเมลทดสอบ" (จำกัด 1 ครั้ง/5 นาที)
-- ยังไม่ใส่ env = หน้า settings ขึ้น "ยังไม่ได้ตั้งค่าระบบอีเมล" (ไม่มีปุ่มตาย) · cron `0 1 * * *` เรียก `/api/cron/notify` (ไม่มี secret = 401)
+- ✅ เมนู ≡ (หน้าแรกมือถือ + แถบบน desktop: ชื่อ/บ้าน, การตั้งค่า, ดูเป็นรายการ, **ออกจากระบบสีแดงล่างสุด**) + หน้า `/settings` (สวิตช์อีเมล, เตือนล่วงหน้า 1/2/3 วัน, ส่งเมลทดสอบ 5 นาที/ครั้ง) + cron `0 1 * * *` (08:00 ไทย) `app/api/cron/notify` (ต้อง `Authorization: Bearer $CRON_SECRET`) · migration 0005 รันแล้ว · merge main แล้ว (`69b808b`) — **ยังไม่แน่ใจว่าผู้ใช้ deploy แล้วหรือยัง** (เช็ก `npx vercel ls frezill --prod`) · ยังไม่ได้ดูหน้าจอจริง/ส่งเมลจริง · ไม่มี env อีเมล = หน้าตั้งค่าขึ้น "ยังไม่ได้ตั้งค่าระบบอีเมล" (ไม่มีปุ่มตาย)
+  - ไฟล์: `lib/notify.ts` (เลือกของ + สร้างหัวเรื่อง/HTML, มีเทส), `lib/supabase/admin.ts` (service role, server only), `app/(app)/settings/*`, `components/shell/Menu.tsx`, `supabase/migrations/0005_notify_settings.sql`
+- 🚧 **ผู้ใช้เปลี่ยนใจ: ส่งเมลด้วย Gmail App Password แทน Brevo** (ยังไม่ได้เริ่ม) → งานถัดไปข้อ 1
+- 🚧 branch `sheet-rb` (แผงวัตถุดิบบนมือถือเหลือ 75%: peek 196→147px, ขยาย 70→52dvh, 3→4 คอลัมน์, ช่อง 84→63px, ตัวหนังสือ 12px, desktop ไม่เปลี่ยน) · test 84 + tsc ผ่าน · build กำลังรันตอนเขียนไฟล์นี้ · ยังไม่ได้ push แน่ชัด → เช็ก `git ls-remote origin sheet-rb` ถ้าไม่มี ให้ใช้ `origin/sheet-75` แล้ว rebase บน main · ต้อง rebase บน main ก่อน merge (main มี commit handoff นี้เพิ่ม)
 
 ## ถัดไป
-1. ปิดงาน `sheet-75` และ `settings-email` (ด้านบน) → ส่ง Tester (Sonnet) ลองลากเด้ง/ชั้นเต็ม/คำเตือน/ล็อกชื่อ/การ์ดเมนูใหม่/ตั้งค่า+อีเมล บน production + วัด FPS มือถือซ้ำ
-2. (ไม่บังคับ) ผู้ใช้วาดรูปวัตถุดิบเองแทน Fluent 39 รูป (30 ชิ้น + 9 หมวด) ตามรายการ id ใน `lib/catalog.ts` → วางใน `public/ingredients/<id>.svg|png` (512×512 พื้นใส) → `node scripts/ingredients-manifest.mjs` → commit รูป+`lib/ingredients-manifest.json` → deploy (ไม่ต้องแก้โค้ด; ยังไม่มีรูป = สติกเกอร์ตัวหนังสือ) · คู่มือวาด: สเปก §4.5
-3. แจ้งเตือน web push (ขอบเขต "ทำตอนนี้" ข้อสุดท้าย ยังไม่มีแถว milestone) — ถามผู้ใช้ก่อน
-4. เมื่อมีผู้ใช้หลายบ้าน: เปิด billing ใน Google AI Studio (free tier 20 ครั้ง/วัน/โมเดล/project)
+1. **เปลี่ยนจาก Brevo เป็น Gmail SMTP (App Password):** ใช้ `nodemailer` (เพิ่ม dep ได้) หรือ SMTP ตรง · env ใหม่: `GMAIL_USER`, `GMAIL_APP_PASSWORD` (16 ตัว ไม่มีช่องว่าง, trim) · `MAIL_FROM` ไม่บังคับ (ค่าเริ่มต้น = `frezill <GMAIL_USER>`) · ลบโค้ด/ข้อความ Brevo ออก, ซ่อนส่วนอีเมลถ้าไม่มี env · ทำใน worktree แยก + Builder Sonnet ponytail lite · เทส `lib/notify.ts` เดิมยังใช้ได้
+   - ผู้ใช้ทำ: Google Account → Security → เปิด 2-Step Verification → App passwords → สร้าง "frezill" → ได้รหัส 16 ตัว → `npx vercel env add GMAIL_USER production`, `npx vercel env add GMAIL_APP_PASSWORD production`, `npx vercel env add SUPABASE_SERVICE_ROLE_KEY production` (Supabase → Settings → API → service_role), `openssl rand -hex 32 | npx vercel env add CRON_SECRET production` → deploy → ≡ → การตั้งค่า → ส่งอีเมลทดสอบ
+   - Gmail ส่งได้ ~500 ฉบับ/วัน, เมลอาจเข้า spam ครั้งแรก
+2. rebase+deploy `sheet-rb` (ด้านบน)
+3. ส่ง Tester (Sonnet) ลองบน production: ลากเด้ง/ชั้นเต็ม/คำเตือน, ล็อกชื่อ, การ์ดเมนูใหม่ (ถ้าโควตา AI เหลือ), เมนู ≡ + ตั้งค่า + ส่งเมลทดสอบ, แผง 75% + วัด FPS มือถือซ้ำ
+4. แจ้งเตือน web push — ถามผู้ใช้ก่อน (อาจไม่จำเป็นแล้วเพราะมีอีเมล)
+5. เมื่อมีผู้ใช้หลายบ้าน: เปิด billing Google AI Studio
 
 ## วิธีทำงานกับผู้ใช้คนนี้
 - ผู้ใช้ให้ผม (main) เป็นผู้จัดการ: แจกงานให้ agent ตามบทบาท (Designer/Builder = Opus, Reviewer/Tester = Sonnet) เสนอทีม+โมเดล+เวลา+token ก่อน
@@ -42,7 +34,8 @@
 - **agent แก้ production เองไม่ได้** (auto-mode บล็อก: SQL เขียน, merge main, deploy) → ส่งคำสั่งให้ผู้ใช้รันผ่าน `!` (ต้องให้ `!` เป็นตัวแรกของข้อความ)
 - **agent แต่ละตัวต้องใช้ worktree ของตัวเอง** (เคยชนกันเพราะสองตัวใช้โฟลเดอร์หลักพร้อมกัน) · ผู้ใช้รันคำสั่งในเทอร์มินัลปกติ (Ctrl+Alt+T) ดีกว่า `!` เพราะแป้นไทยทำให้มี "ั" ติดหน้า `!`
 - ผู้ใช้อยากให้ Claude deploy เอง แต่ auto-mode บล็อกการแก้ settings และสร้างสคริปต์ deploy → ผู้ใช้ต้องเพิ่มเองผ่าน `/permissions` (Allow, Project local): `Bash(npx vercel deploy --prod)`, `Bash(git merge --ff-only:*)`, `Bash(git push:*)` — ยังไม่ยืนยันว่าเพิ่มแล้ว
-- agent ชอบทิ้งลูปรอ/โปรเซสค้าง (เช่น `until … pgrep -f "next build"` ที่ match ตัวเอง วนไม่จบ) → เช็ก `pgrep -af next` หลังงานเสร็จ
+- build ใน worktree: ห้าม symlink node_modules (Turbopack พัง) ใช้ `cp -al /home/ct/frez-zill/node_modules node_modules` (hardlink เร็ว) · ไม่มี .env ใช้ dummy `NEXT_PUBLIC_SUPABASE_URL=https://x.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=x`
+- agent ชอบทิ้งลูปรอ/โปรเซสค้าง (build ค้าง load ~10) (เช่น `until … pgrep -f "next build"` ที่ match ตัวเอง วนไม่จบ) → เช็ก `pgrep -af next` หลังงานเสร็จ
 - deploy จาก clone สะอาดเสมอ (agent อาจกำลังแก้ไฟล์ในโฟลเดอร์หลัก):
 ```
 ! cd ~/frez-zill && git checkout main && git pull --ff-only && git merge --ff-only origin/<branch> && git push && rm -rf /tmp/fz && git worktree add -f /tmp/fz main && cp -r .vercel /tmp/fz/ && cd /tmp/fz && npx vercel deploy --prod; cd ~/frez-zill && git worktree remove --force /tmp/fz
