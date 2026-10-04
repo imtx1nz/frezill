@@ -3,6 +3,7 @@
   "banana": "svg",
   "beef": "svg",
   "butter": "svg",
+  "cabbage": "svg",
   "carrot": "svg",
   "cat-cooked": "svg",
   "cat-dairy-egg": "svg",
@@ -27,12 +28,14 @@
   "milk": "svg",
   "napa-cabbage": "svg",
   "orange": "svg",
+  "pork-minced": "svg",
   "pork": "svg",
   "sauce": "svg",
   "sausage": "svg",
   "shrimp": "svg",
   "soda": "svg",
   "squid": "svg",
+  "tofu": "svg",
   "tomato": "svg",
   "yogurt": "svg"
 }
