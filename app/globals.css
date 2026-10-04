@@ -145,6 +145,15 @@ a {
       backdrop-filter: blur(12px) grayscale(1) brightness(0.4);
     }
   }
+  /* Phone: the sheet is solid navy. Its blurred backdrop had to be recomposited every frame
+     it moved or scrolled (measured: sheet scroll 26 → 60 fps without it at 4x CPU). */
+  @media (max-width: 1023.98px) {
+    #ingredients {
+      background: var(--panel);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
   /* Phone: when the ingredient sheet is docked, the tab bar becomes its square-topped base
      so the sheet sits on it cleanly instead of showing through rounded corners. */
   body:has(#ingredients) .tabbar {
@@ -536,7 +545,10 @@ a {
     }
   }
   [data-busy] .fly,
-  [data-busy] .fly * {
+  [data-busy] .fly *,
+  /* also while the phone sheet is open: they'd recalc style every frame under it */
+  body:has(#ingredients[data-sheet="expanded"]) .fly,
+  body:has(#ingredients[data-sheet="expanded"]) .fly * {
     animation-play-state: paused;
   }
 }

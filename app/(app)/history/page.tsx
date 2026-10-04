@@ -182,17 +182,23 @@ export default async function HistoryPage({ searchParams }: PageProps<"/history"
           </nav>
 
           {days.length === 0 && <p className="text-ink-2">ไม่มีรายการในช่วงนี้</p>}
-          {days.map(({ day, items }) => {
+          {days.map(({ day, items }, i) => {
             const n = (k: HistoryKind[]) => items.filter((e) => k.includes(e.kind)).length;
             const sum = [n(["add"]) && `+${n(["add"])}`, n(["use", "finish"]) && `ใช้ ${n(["use", "finish"])}`, n(["discard"]) && `ทิ้ง ${n(["discard"])}`]
               .filter(Boolean)
               .join(" · ");
             return (
-              <section key={day} aria-label={dayLabel(day, today)}>
-                <h2 className="mb-2 flex items-baseline justify-between gap-3 px-1">
-                  <span className="font-display text-[1.125rem] font-medium">{dayLabel(day, today)}</span>
+              // Newest day open, older days fold away (native <details>, no JS).
+              <details key={day} open={i === 0} className="group">
+                <summary className="mb-2 flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-1 [&::-webkit-details-marker]:hidden">
+                  <h2 className="flex items-center gap-1.5 font-display text-[1.125rem] font-medium">
+                    <span className="grid size-6 shrink-0 place-items-center rounded-full border-2 border-outline bg-cream text-outline">
+                      <ChevronRight className="size-4 transition-transform group-open:rotate-90" strokeWidth={3} aria-hidden="true" />
+                    </span>
+                    {dayLabel(day, today)}
+                  </h2>
                   <span className="text-[0.9375rem] text-ink-2">{sum}</span>
-                </h2>
+                </summary>
                 <ul className="card-game px-3 py-1">
                   {items.map((e) => {
                     const { label, cls, Icon } = PILL[e.kind];
@@ -238,7 +244,7 @@ export default async function HistoryPage({ searchParams }: PageProps<"/history"
                     );
                   })}
                 </ul>
-              </section>
+              </details>
             );
           })}
 

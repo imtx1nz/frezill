@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { ChevronDown, ChevronRight, Plus, Search } from "lucide-react";
 import { IngredientPicture } from "@/components/IngredientPicture";
 import { CATALOG, type CatalogItem } from "@/lib/catalog";
@@ -23,8 +23,6 @@ const norm = (s: string) => s.trim().toLowerCase();
 export function SideBar({
   collapsed,
   setCollapsed,
-  sheet,
-  setSheet,
   openKey,
   liftedId,
   armedId,
@@ -32,22 +30,22 @@ export function SideBar({
 }: {
   collapsed: boolean;
   setCollapsed: (v: boolean) => void;
-  sheet: "peek" | "expanded";
-  setSheet: (v: "peek" | "expanded") => void;
   openKey: string | null;
   liftedId: string | null;
   armedId: string | null;
   tiles: TileHandlers;
 }) {
+  // Sheet state lives here so opening/closing re-renders only the bar, not the whole home.
+  const [sheet, setSheet] = useState<"peek" | "expanded">("peek");
+  if (liftedId && sheet === "expanded") setSheet("peek"); // picking a tile up docks the sheet
   const [cat, setCat] = useState("all");
   const [q, setQ] = useState("");
   const sheetRef = useRef<HTMLElement>(null);
   const grab = useRef<{ y: number; dy: number } | null>(null);
 
-  const shown = CATALOG.filter(
-    (c) =>
-      (cat === "all" || c.category === cat) &&
-      (!q.trim() || [c.name, ...c.aliases].some((n) => norm(n).includes(norm(q)))),
+  const shown = useMemo(
+    () => CATALOG.filter((c) => (cat === "all" || c.category === cat) && (!q.trim() || [c.name, ...c.aliases].some((n) => norm(n).includes(norm(q))))),
+    [cat, q],
   );
   const expanded = sheet === "expanded";
 
@@ -77,13 +75,68 @@ export function SideBar({
     else setSheet(g.dy < 0 ? "expanded" : "peek");
   };
 
+  // Memoized so a sheet open/close (only data-sheet changes) re-renders none of the tiles.
+  const grid = useMemo(
+    () => (
+      <ul className="flex min-h-0 flex-1 gap-2.5 overflow-x-auto overscroll-contain px-3 pb-4 pt-2.5 group-data-[sheet=expanded]:grid group-data-[sheet=expanded]:grid-cols-3 group-data-[sheet=expanded]:content-start group-data-[sheet=expanded]:overflow-y-auto lg:grid lg:grid-cols-3 lg:content-start lg:overflow-y-auto">
+        {shown.map((c) => (
+          <li key={c.id} className="relative max-lg:group-data-[sheet=peek]:w-[84px] max-lg:group-data-[sheet=peek]:shrink-0">
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label={`${c.name} ดูรายละเอียด`}
+              aria-expanded={openKey === `cat:${c.id}`}
+              aria-controls="details"
+              data-lifted={liftedId === c.id || undefined}
+              data-armed={armedId === c.id || undefined}
+              onPointerDown={(e) => tiles.onPointerDown(e, c)}
+              onPointerEnter={(e) => tiles.onPointerEnter(e, c)}
+              onPointerLeave={tiles.onPointerLeave}
+              onClick={(e) => tiles.onClick(e, c)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  tiles.onClick(e as unknown as React.MouseEvent<HTMLElement>, c);
+                }
+              }}
+              onContextMenu={(e) => e.preventDefault()}
+              className="tile aspect-square w-full cursor-grab touch-pan-x group-data-[sheet=expanded]:touch-pan-y lg:touch-pan-y"
+            >
+              {/* sticker fills ~85% of the well; the name sits below the tile, never on the picture */}
+              {/* all sizes rendered, CSS picks one, so opening the sheet changes no DOM */}
+              <IngredientPicture name={c.name} category={c.category} size={64} className="max-lg:group-data-[sheet=expanded]:hidden lg:hidden" />
+              <IngredientPicture name={c.name} category={c.category} size={96} className="max-lg:group-data-[sheet=peek]:hidden lg:hidden" />
+              <IngredientPicture name={c.name} category={c.category} size={80} className="max-lg:hidden" />
+            </div>
+            <span
+              aria-hidden="true"
+              className="mt-1.5 block truncate text-center text-[0.875rem] font-semibold leading-[1.2] text-white group-data-[sheet=expanded]:line-clamp-2 group-data-[sheet=expanded]:whitespace-normal lg:line-clamp-2 lg:whitespace-normal"
+            >
+              {c.name}
+            </span>
+            <button
+              type="button"
+              data-plus
+              onClick={() => tiles.onPlus(c)}
+              aria-label={`เพิ่ม${c.name}เข้าตู้`}
+              className="absolute -right-1.5 -top-1.5 z-[1] grid size-[26px] place-items-center rounded-full border-2 border-outline bg-[var(--candy-green)] text-outline before:absolute before:-inset-[9px] before:content-['']"
+            >
+              <Plus className="size-3.5" strokeWidth={3.5} aria-hidden="true" />
+            </button>
+          </li>
+        ))}
+      </ul>
+    ),
+    [shown, openKey, liftedId, armedId, tiles],
+  );
+
   return (
     <aside
       ref={sheetRef}
       id="ingredients"
       aria-label="แถบวัตถุดิบ"
       data-sheet={sheet}
-      className={`panel fixed inset-x-0 bottom-[var(--tabbar-h)] z-30 flex h-[70dvh] flex-col !rounded-b-none !border-x-0 !border-b-0 transition-transform duration-200 ease-[var(--ease-out)] ${
+      className={`panel group fixed inset-x-0 bottom-[var(--tabbar-h)] z-30 flex h-[70dvh] flex-col !rounded-b-none !border-x-0 !border-b-0 transition-transform duration-200 ease-[var(--ease-out)] ${
         expanded ? "" : "translate-y-[calc(70dvh-var(--peek))]"
       } lg:inset-x-auto lg:bottom-auto lg:right-4 lg:top-[80px] lg:h-auto lg:max-h-[calc(100vh-100px)] lg:w-[340px] lg:translate-y-0 lg:!rounded-[24px] lg:!border-[length:var(--ow-lg)] lg:duration-[240ms] ${
         collapsed ? "lg:translate-x-[calc(100%+16px)]" : ""
@@ -157,59 +210,7 @@ export function SideBar({
           </button>
         </div>
       ) : (
-        <ul
-          className={`min-h-0 flex-1 gap-2.5 overscroll-contain px-3 pb-4 pt-2.5 lg:grid lg:grid-cols-3 lg:content-start lg:overflow-y-auto ${
-            expanded ? "grid grid-cols-3 content-start overflow-y-auto" : "flex overflow-x-auto"
-          }`}
-        >
-          {shown.map((c) => (
-            <li key={c.id} className={`relative ${expanded ? "" : "max-lg:w-[84px] max-lg:shrink-0"}`}>
-              <div
-                role="button"
-                tabIndex={0}
-                aria-label={`${c.name} ดูรายละเอียด`}
-                aria-expanded={openKey === `cat:${c.id}`}
-                aria-controls="details"
-                data-lifted={liftedId === c.id || undefined}
-                data-armed={armedId === c.id || undefined}
-                onPointerDown={(e) => tiles.onPointerDown(e, c)}
-                onPointerEnter={(e) => tiles.onPointerEnter(e, c)}
-                onPointerLeave={tiles.onPointerLeave}
-                onClick={(e) => tiles.onClick(e, c)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    tiles.onClick(e as unknown as React.MouseEvent<HTMLElement>, c);
-                  }
-                }}
-                onContextMenu={(e) => e.preventDefault()}
-                className={`tile aspect-square w-full cursor-grab ${expanded ? "touch-pan-y" : "touch-pan-x"} lg:touch-pan-y`}
-              >
-                {/* sticker fills ~85% of the well; the name sits below the tile, never on the picture */}
-                {expanded ? (
-                  <IngredientPicture name={c.name} category={c.category} size={96} />
-                ) : (
-                  <>
-                    <IngredientPicture name={c.name} category={c.category} size={64} className="lg:hidden" />
-                    <IngredientPicture name={c.name} category={c.category} size={80} className="max-lg:hidden" />
-                  </>
-                )}
-              </div>
-              <span aria-hidden="true" className={`mt-1.5 block text-center text-[0.875rem] font-semibold leading-[1.2] text-white ${expanded ? "line-clamp-2" : "truncate lg:line-clamp-2 lg:whitespace-normal"}`}>
-                {c.name}
-              </span>
-              <button
-                type="button"
-                data-plus
-                onClick={() => tiles.onPlus(c)}
-                aria-label={`เพิ่ม${c.name}เข้าตู้`}
-                className="absolute -right-1.5 -top-1.5 z-[1] grid size-[26px] place-items-center rounded-full border-2 border-outline bg-[var(--candy-green)] text-outline before:absolute before:-inset-[9px] before:content-['']"
-              >
-                <Plus className="size-3.5" strokeWidth={3.5} aria-hidden="true" />
-              </button>
-            </li>
-          ))}
-        </ul>
+        grid
       )}
     </aside>
   );

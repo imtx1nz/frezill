@@ -31,6 +31,9 @@ type Drag = {
   over: "freezer" | "chill" | null;
 };
 
+// Once picked up, stop the page from scrolling under a touch drag. Attached only while dragging:
+// a permanent non-passive touchmove makes every scroll wait on the main thread.
+const blockScroll = (e: TouchEvent) => e.preventDefault();
 const fine = () => matchMedia("(hover: hover) and (pointer: fine)").matches;
 const STORE = "frezill.sidebar.collapsed";
 
@@ -69,7 +72,6 @@ export function FridgeHome({
   const [armed, setArmed] = useState<string | null>(null);
   const [popId, setPopId] = useState<string | null>(null);
   const [live, setLive] = useState("");
-  const [sheet, setSheet] = useState<"peek" | "expanded">("peek");
   const [collapsed, setCollapsedState] = useState(false);
 
   const freezerRef = useRef<HTMLDivElement>(null);
@@ -176,9 +178,9 @@ export function FridgeHome({
     navigator.vibrate?.(10);
     clearTimeout(hoverT.current);
     setCard(null);
-    setSheet("peek");
     setDrag({ cat: g.cat, over: null });
     document.documentElement.dataset.dragging = "";
+    window.addEventListener("touchmove", blockScroll, { passive: false });
     setLive(`หยิบ${g.cat.name}แล้ว ลากไปวางในตู้`);
     requestAnimationFrame(frame);
   };
@@ -191,6 +193,7 @@ export function FridgeHome({
       cancelAnimationFrame(g.raf);
     }
     delete document.documentElement.dataset.dragging;
+    window.removeEventListener("touchmove", blockScroll);
     setArmed(null);
     window.removeEventListener("pointermove", onMove);
     window.removeEventListener("pointerup", onUp);
@@ -257,13 +260,6 @@ export function FridgeHome({
     finish();
     if (g.picked) flyBack(g);
   }
-
-  // Once picked up, stop the page from scrolling under a touch drag.
-  useEffect(() => {
-    const block = (e: TouchEvent) => d.current?.picked && e.preventDefault();
-    window.addEventListener("touchmove", block, { passive: false });
-    return () => window.removeEventListener("touchmove", block);
-  }, []);
 
   const tileDown = (e: React.PointerEvent<HTMLElement>, cat: CatalogItem) => {
     lastPointer.current = e.pointerType;
@@ -435,8 +431,6 @@ export function FridgeHome({
         <SideBar
           collapsed={collapsed}
           setCollapsed={setCollapsed}
-          sheet={sheet}
-          setSheet={setSheet}
           openKey={card?.key ?? null}
           liftedId={drag?.cat.id ?? null}
           armedId={armed}
