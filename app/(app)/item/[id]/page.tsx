@@ -1,3 +1,4 @@
+import { PendingButton } from "@/components/inventory/PendingButton";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Trash2 } from "lucide-react";
@@ -37,15 +38,15 @@ export default async function ItemPage({ params, searchParams }: PageProps<"/ite
           ทิ้งล็อตนี้ (เหตุผล ไม่บังคับ)
           <input name="reason" maxLength={200} placeholder="เช่น เสีย, ขึ้นรา" className={inputClass} />
         </label>
-        <button className="h-11 rounded-xl border border-warn bg-warn-soft font-semibold text-warn hover:brightness-95">
+        <PendingButton className="h-11 rounded-xl border border-warn bg-warn-soft font-semibold text-warn hover:brightness-95">
           ทิ้ง
-        </button>
+        </PendingButton>
       </form>
 
       <form action={deleteLot.bind(null, id)}>
-        <button className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-danger bg-danger-soft font-semibold text-danger hover:brightness-95">
+        <PendingButton className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-danger bg-danger-soft font-semibold text-danger hover:brightness-95">
           <Trash2 className="size-4.5" /> ลบรายการนี้ (ใส่ผิด)
-        </button>
+        </PendingButton>
       </form>
     </main>
   );

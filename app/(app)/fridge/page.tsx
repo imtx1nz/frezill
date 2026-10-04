@@ -1,3 +1,4 @@
+import { PendingButton } from "@/components/inventory/PendingButton";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -91,13 +92,13 @@ export default async function FridgePage() {
               </p>
               <div className="mt-3 flex gap-2">
                 <form action={consume.bind(null, fridge_id, name, unit, "one")} className="flex flex-1">
-                  <button className={btn}>−1</button>
+                  <PendingButton className={btn}>−1</PendingButton>
                 </form>
                 <form action={consume.bind(null, fridge_id, name, unit, "half")} className="flex flex-1">
-                  <button className={btn}>ใช้ครึ่งหนึ่ง</button>
+                  <PendingButton className={btn}>ใช้ครึ่งหนึ่ง</PendingButton>
                 </form>
                 <form action={consume.bind(null, fridge_id, name, unit, "all")} className="flex flex-1">
-                  <button className={btn}>หมดแล้ว</button>
+                  <PendingButton className={btn}>หมดแล้ว</PendingButton>
                 </form>
               </div>
               <ul className="mt-3 flex flex-col border-t border-line pt-1">
