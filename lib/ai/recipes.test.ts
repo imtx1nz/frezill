@@ -49,7 +49,7 @@ describe("normalize", () => {
       items,
     );
     expect(m.ingredients).toEqual([
-      { name: "ไข่ไก่", qty: 2, unit: "ฟอง", inFridge: true },
+      { name: "ไข่ไก่", qty: 1, unit: "ฟอง", inFridge: true },
       { name: "น้ำปลา", qty: 1, unit: "ช้อน", inFridge: false },
     ]);
     expect(m.missing).toEqual(["ต้นหอม", "หมูสับ"]);
@@ -57,5 +57,17 @@ describe("normalize", () => {
   it("prefers the fridge lot with the same unit", () => {
     const [m] = normalize([{ ...menu(), ingredients: [{ name: "ไข่ไก่", qty: 1, unit: "แพ็ค" }] } as never], items);
     expect(m.ingredients[0].unit).toBe("แพ็ค");
+  });
+  describe("qty vs fridge unit", () => {
+    const q = (qty: number, unit: string, fq: number, fu: string) =>
+      normalize([{ ...menu(), ingredients: [{ name: "x", qty, unit }] } as never], [{ name: "x", unit: fu, qty: fq, urgent: false }])[0].ingredients[0];
+    it("converts g to kg", () => expect(q(100, "กรัม", 1, "กิโลกรัม")).toMatchObject({ qty: 0.1, unit: "กิโลกรัม" }));
+    it("caps at available", () => expect(q(2, "กิโลกรัม", 0.5, "กิโลกรัม").qty).toBe(0.5));
+    it("converts ml to l", () => expect(q(500, "มล.", 1, "ลิตร").qty).toBe(0.5));
+    it("caps same unit", () => expect(q(10, "ฟอง", 4, "ฟอง").qty).toBe(4));
+    it("unconvertible: min(1, available)", () => {
+      expect(q(6, "ฟอง", 3, "แผง").qty).toBe(1);
+      expect(q(6, "ฟอง", 0.5, "แผง").qty).toBe(0.5);
+    });
   });
 });

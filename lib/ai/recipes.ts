@@ -29,6 +29,17 @@ export function parseMenus(text: string | undefined) {
   }
 }
 
+// unit → [group, factor to the group's base unit (g / ml)]
+const UNITS: Record<string, [string, number]> = { กรัม: ["w", 1], g: ["w", 1], กิโลกรัม: ["w", 1000], กก: ["w", 1000], "กก.": ["w", 1000], kg: ["w", 1000], มิลลิลิตร: ["v", 1], มล: ["v", 1], "มล.": ["v", 1], ml: ["v", 1], ลิตร: ["v", 1000], l: ["v", 1000] };
+
+/** AI qty expressed in the fridge unit, capped at what the fridge has, max 2 decimals. */
+function fitQty(ing: { qty: number; unit: string }, hit: Item) {
+  const a = UNITS[ing.unit.trim().toLowerCase()], b = UNITS[hit.unit.trim().toLowerCase()];
+  // Same unit: as is. Convertible: scale. Otherwise (e.g. ฟอง vs แผง) the number is meaningless in the fridge unit, so use 1 (or all that's left if less).
+  const q = ing.unit === hit.unit ? ing.qty : a && b && a[0] === b[0] ? (ing.qty * a[1]) / b[1] : 1;
+  return Math.round(Math.min(q, hit.qty) * 100) / 100;
+}
+
 /** Anything the AI used that is neither in the fridge nor a pantry staple goes to `missing`; fridge items get the fridge's unit. */
 export function normalize(menus: z.infer<typeof menuSchema>[], items: Item[]): Menu[] {
   return menus.map((m) => {
@@ -37,7 +48,7 @@ export function normalize(menus: z.infer<typeof menuSchema>[], items: Item[]): M
     for (const ing of m.ingredients) {
       const own = items.filter((i) => i.name === ing.name);
       const hit = own.find((i) => i.unit === ing.unit) ?? own[0];
-      if (hit) ingredients.push({ ...ing, unit: hit.unit, inFridge: true });
+      if (hit) ingredients.push({ ...ing, qty: fitQty(ing, hit), unit: hit.unit, inFridge: true });
       else if (PANTRY.includes(ing.name)) ingredients.push({ ...ing, inFridge: false });
       else missing.add(ing.name);
     }
