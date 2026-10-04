@@ -1,6 +1,6 @@
 # HANDOFF — frezill
 
-**อัปเดต:** 2026-10-04 · กฎการพัฒนาอยู่ที่ `.claude/skills/frezill-dev/SKILL.md`
+**อัปเดต:** 2026-10-04 (M5) · กฎการพัฒนาอยู่ที่ `.claude/skills/frezill-dev/SKILL.md`
 
 ## สถานะ
 - ✅ M0: Next.js 16 + Tailwind 4 + Supabase client + Vitest, deploy แล้วที่ https://frezill.vercel.app (Vercel project `frezill`)
@@ -12,8 +12,42 @@
 - ✅ QA อัตโนมัติบน production (2026-10-04, Playwright + บัญชีทดสอบ `frezill.qa.*@gmail.com`): login, เพิ่ม, เตือนซ้ำ, FEFO (ตรวจใน DB แล้ว), แถบเตือน, เรียงวัน, แก้วัน, ทิ้ง, ลบ ผ่านหมด
   - 🐞 พบ: กดปุ่ม −1/ใช้ครึ่งหนึ่ง/หมดแล้ว แล้วหน้าจอเปลี่ยนช้า 4–5 วินาที และปุ่มไม่ล็อก (กดซ้ำ = ตัดซ้ำ) เพราะ function รันที่ iad1 แต่ DB อยู่โซล
   - ✅ แก้แล้วและขึ้น production (`04fe406`): `vercel.json` regions `icn1` + `PendingButton` ล็อกปุ่มระหว่างบันทึก · วัดซ้ำ: ปุ่มอัปเดตใน 1.1–1.8 วินาที (เดิม 3.9–4.8)
-- ➡️ ถัดไป: เปิด session ใหม่ทำ **M5** · ✅ `GEMINI_API_KEY` ใส่แล้วทั้ง `.env.local` และ Vercel Production (Secret) ทดสอบแล้วได้ 200 (key รูปแบบใหม่ขึ้นต้น `AQ.` ใช้ได้) · ⚠️ ค่าที่วางเคยมี `\r` นำหน้า: ในโค้ดให้ `.trim()` key เสมอ เพราะค่าใน Vercel อ่านกลับมาเช็กไม่ได้ · QA ใช้บัญชี `frezill.qa.*` ได้ (สคริปต์ Playwright เดิมอยู่ใน scratchpad ของ session ก่อน หาย ให้เขียนใหม่ด้วย playwright-core + chromium ใน `~/.cache/ms-playwright`)
+- 🟡 **M5 (AI เมนู) โค้ดเสร็จบน branch `m5-recipes` ยังไม่ขึ้น production** (2026-10-04) · Vitest 41 เทส, tsc, lint, build ผ่าน
+  - ⛔ **ยิง Gemini จริงไม่ผ่าน (ปัญหาที่ key/โปรเจกต์ Google ไม่ใช่โค้ด):** `gemini-2.5-flash` ตอบ 404 "no longer available to new users" ให้ใช้ `gemini-3.8-flash` แทน แต่ทุกรุ่น (3.8/3.7/3.6/3.5/flash-latest) ตอบ 403 "Your project has been denied access. Please contact support." → ผู้ใช้ต้องเข้า Google AI Studio เช็กโปรเจกต์/billing หรือสร้าง key ใหม่ในโปรเจกต์อื่น แล้วใส่ใหม่ทั้ง `.env.local` และ Vercel
+  - เช็ก key เร็ว ๆ: `K=$(grep ^GEMINI_API_KEY .env.local | cut -d= -f2- | tr -d '\r\n "'); curl -s -o /dev/null -w '%{http_code}\n' -H "x-goog-api-key: $K" -H 'content-type: application/json' -d '{"contents":[{"parts":[{"text":"hi"}]}]}' https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent` ต้องได้ `200`
+- 🔧 QA ใช้บัญชี `frezill.qa.*` ได้ (สคริปต์ Playwright เดิมหาย ให้เขียนใหม่ด้วย playwright-core + chromium ใน `~/.cache/ms-playwright`)
 - 🔧 Supabase CLI ล็อกอินแล้ว: รัน migration ได้ด้วย `npx supabase db query --linked --project-ref wlprvlbdohsjjljrggpk -f <file>` (agent โดนบล็อกตอนแก้ production ต้องให้ผู้ใช้รันเองผ่าน `!`)
+
+## ขั้นขึ้น production M5
+0. [ ] ทำให้ Gemini key ใช้ได้ก่อน (ดู ⛔ ด้านบน) คำสั่งเช็กต้องได้ `200` · ถ้าจะใช้รุ่นอื่นไม่ต้องแก้โค้ด ตั้ง env `GEMINI_MODEL` (ค่าเริ่มต้น `gemini-3.8-flash`)
+1. [ ] รัน migration 0003 (ตาราง `recipe_requests` + RLS, รันซ้ำได้): `npx supabase db query --linked --project-ref wlprvlbdohsjjljrggpk -f supabase/migrations/0003_recipe_requests.sql`
+   - เช็ก: `npx supabase db query --linked --project-ref wlprvlbdohsjjljrggpk "select policyname from pg_policies where tablename='recipe_requests'"` ต้องได้ 2 แถว
+   - หมายเหตุ: branch `m1-invites` มี `0002_*` ของตัวเอง ถ้าจะ merge ทีหลังให้เปลี่ยนเลขเป็น `0004_*`
+2. [ ] `git checkout main && git merge --ff-only m5-recipes && git push`
+3. [ ] `npx vercel deploy --prod`
+
+**กดเช็ก M5 บน https://frezill.vercel.app** (ล็อกอินก่อน)
+- หน้า today มีการ์ด "เมนูแนะนำจาก AI" (ถ้าไม่มี key การ์ดหายและ /recipes เป็น 404)
+- ตู้มีของอย่างน้อย 3–4 อย่าง ให้ 1 อย่างหมดพรุ่งนี้ (เช่น ไข่ไก่ 4 ฟอง) และ 1 อย่างหมดอายุแล้ว
+- กดการ์ด → "ขอเมนูจากของในตู้" → ปุ่มหมุนระหว่างรอ (~5–15 วินาที) → ได้ **3 การ์ด** แต่ละการ์ดมีชื่อ, เวลา·ความยาก, ป้ายเหลือง "ใช้ของใกล้หมด: ไข่ไก่", วัตถุดิบ (ในตู้/ของในครัว), "ต้องซื้อเพิ่ม" (ถ้ามี), ขั้นตอน และกล่อง "เมนูนี้แนะนำโดย AI โปรดตรวจสภาพวัตถุดิบก่อนปรุง"
+- ของที่หมดอายุแล้วต้องไม่โผล่เป็น "ในตู้" · ข้อความ "วันนี้ขอได้อีก N ครั้ง" ลดลงทีละ 1
+- กด "ทำเมนูนี้แล้ว" → ขึ้นช่องจำนวนของแต่ละอย่าง → แก้ตัวเลข 1 ช่อง → "ยืนยัน ตัดของออกจากตู้" → ไปหน้าตู้เย็น จำนวนลดลงตามที่ใส่ (ล็อตหมดก่อนถูกตัดก่อน)
+- กด "ขอเมนูใหม่" จนครบ 10 ครั้ง/วัน → ขึ้น "วันนี้บ้านนี้ขอเมนูครบ 10 ครั้งแล้ว" (เช็กง่ายกว่า: `select count(*) from recipe_requests` แล้ว insert แถวทดสอบ)
+- เช็กบนมือถือ: การ์ดไม่ล้นจอ, ช่องตัวเลขเปิดแป้นตัวเลข
+
+**การตัดสินใจ M5 (agent ตัดสินเอง)**
+- `lib/ai/recipes.ts`: Zod `aiOutputSchema` (3 เมนู, missing ≤ 2, difficulty ง่าย/ปานกลาง/ยาก, minutes เป็นจำนวนเต็ม) = ด่านจริง · `responseSchema` แบบ Gemini เขียนมือ (ไม่ใช้ `z.toJSONSchema` เพราะ Gemini รับ keyword ไม่ครบ) · ไม่ผ่าน → ลองใหม่ 1 ครั้ง → "AI ไม่ว่าง ลองใหม่อีกครั้ง"
+- เปลี่ยนรุ่นจาก `gemini-2.5-flash` เป็น `gemini-3.8-flash` เพราะ 2.5 ปิดรับ key ใหม่แล้ว (ตาม error ของ Google) ตั้งทับได้ด้วย env `GEMINI_MODEL`
+- ingredient มี `unit` เพิ่มจากสเปก (ต้องใช้ตอนตัดของ) · ชื่อต้องตรงกับในตู้ทุกตัวอักษร ไม่งั้นย้ายไป `missing` (`normalize()`) · pantry = รายการคงที่ 11 อย่าง (ข้าว น้ำปลา น้ำมัน ฯลฯ) ใช้ได้แต่ไม่ถูกตัด · ไม่ได้ตัด missing ให้เหลือ 2 หลัง normalize (โชว์ครบดีกว่าซ่อน)
+- ส่งให้ AI เฉพาะ ชื่อ+จำนวน+หน่วย+ป้าย urgent ของที่ยังไม่หมดอายุ · ไม่ได้ส่ง `diet_prefs` เพราะยังไม่มี UI ให้ตั้ง (`buildPrompt` รับ `diet` ไว้แล้ว)
+- rate limit: นับ `recipe_requests` ของบ้านตั้งแต่เที่ยงคืนตาม `households.timezone` (`dayStartIn()` มีเทส) · บันทึกก่อนเรียก AI (เรียกพลาดก็นับ) · RLS ห้าม update/delete จึงลบเพื่อรีเซ็ตเองไม่ได้
+- "ทำเมนูนี้แล้ว" = `<details>` เปิดฟอร์มยืนยันจำนวน (ไม่มี JS เพิ่ม) → `cookMenu` ใน `fridge/actions.ts` ใช้ `deduct()` ตัวเดียวกับ `consume` (FEFO + usage_logs) · ไม่ได้เก็บเมนูลง DB (กดออกจากหน้าแล้วเมนูหาย ต้องขอใหม่)
+- `/recipes` เป็น 404 และการ์ดในหน้า today ซ่อน ถ้าไม่มี `GEMINI_API_KEY`
+
+**ความเสี่ยง / ยังไม่ได้ทดสอบ (M5)**
+- **ยังไม่เคยได้คำตอบจริงจาก Gemini** (key โดน 403) prompt + `responseSchema` จึงยังไม่ได้พิสูจน์ ถ้า Gemini ไม่รับ schema จะได้ "AI ไม่ว่าง" เสมอ → ดู status ด้วยคำสั่งเช็ก key ด้านบนโดยใส่ body จริง
+- ยังไม่ได้กดจริงหลังล็อกอิน (migration 0003 ยังไม่รัน) · Vercel function timeout ถ้า Gemini ช้ามาก
+- การตัดหลายวัตถุดิบเขียนทีละแถว ไม่มี transaction (เหมือน M2)
 
 ## ขั้นขึ้น production (ทำเสร็จแล้ว 2026-10-04)
 1. [x] เปิด Supabase → SQL Editor → วางเนื้อหาทั้งไฟล์ `supabase/migrations/0002_lots.sql` → Run (รันซ้ำได้ ไม่พัง) · **M3 ไม่มี 0003** (คอลัมน์ `expires_at`, `expiry_guessed` อยู่ใน 0002 แล้ว)
@@ -72,6 +106,7 @@
 - `supabase/migrations/0001_auth_households.sql`: ตาราง + RLS + trigger `handle_new_user`
 - `app/(app)/fridge/actions.ts`: server actions เพิ่ม/แก้/ลบ/ทิ้ง/ตัด FEFO · `lib/inventory.ts`: หมวด, โซน, zod schema, `fefo()` (มีเทส) · `components/inventory/*`: ฟอร์มและหัวหน้า
 - `lib/expiry.ts`: `todayIn(tz)`, `expiryStatus`, `expiryBadge` (ข้อความไทย+สี), `byExpiry`, `thaiDate` (มีเทส) · `components/inventory/ExpiryBadge.tsx`, `NameInput.tsx` (client: datalist + เตือน "ยังมี…") · หน้า `app/(app)/today/page.tsx` = สรุปรายวัน
+- M5: `lib/ai/recipes.ts` (schema, prompt, `normalize`, `suggestMenus`; มีเทส) · `app/(app)/recipes/` (`actions.ts` = rate limit + เรียก AI, `Recipes.tsx` = การ์ด + ฟอร์มยืนยัน) · `cookMenu` ใน `fridge/actions.ts` · `supabase/migrations/0003_recipe_requests.sql`
 - `lib/auth/*`: zod schema, แปล error เป็นไทย, `safeNext` กัน open redirect (มีเทส)
 
 ## วิธีรัน

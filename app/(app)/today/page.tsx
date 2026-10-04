@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { LogOut, Refrigerator, TriangleAlert } from "lucide-react";
+import { ChefHat, LogOut, Refrigerator, TriangleAlert } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/(auth)/actions";
 import { LogoMark } from "@/components/auth/Logo";
@@ -89,6 +89,20 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
           </div>
         </div>
       </Link>
+
+      {process.env.GEMINI_API_KEY?.trim() && (
+        <Link href="/recipes" className={`${card} hover:shadow-[0_12px_32px_-16px_rgb(4_40_30/0.45)]`}>
+          <div className="flex items-center gap-3">
+            <span className="grid size-11 place-items-center rounded-xl bg-brand-soft text-brand">
+              <ChefHat className="size-6" />
+            </span>
+            <div>
+              <p className="font-semibold">เมนูแนะนำจาก AI</p>
+              <p className="text-[0.9375rem] text-ink-2">ใช้ของใกล้หมดอายุก่อน ›</p>
+            </div>
+          </div>
+        </Link>
+      )}
 
       {rows.length > 0 && (
         <section className={card}>

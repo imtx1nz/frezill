@@ -50,9 +50,14 @@ export async function discardLot(id: string, fd: FormData) {
   done();
 }
 
-/** −1 / ใช้ครึ่งหนึ่ง / หมดแล้ว across every lot of the same item, soonest-expiring first. */
-export async function consume(fridgeId: string, name: string, unit: string, mode: "one" | "half" | "all") {
-  const supabase = await createClient();
+/** FEFO-deduct `amountOf(total)` from every lot of name+unit and log it. */
+async function deduct(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  fridgeId: string,
+  name: string,
+  unit: string,
+  amountOf: (total: number) => number,
+) {
   const { data: lots } = await supabase
     .from("lots")
     .select("id, qty, expires_at, created_at")
@@ -60,16 +65,35 @@ export async function consume(fridgeId: string, name: string, unit: string, mode
     .eq("name", name)
     .eq("unit", unit)
     .gt("qty", 0);
-  if (!lots?.length) done();
+  if (!lots?.length) return;
   const total = lots.reduce((s, l) => s + Number(l.qty), 0);
-  const amount = mode === "one" ? 1 : mode === "half" ? total / 2 : total;
+  const amount = amountOf(total);
   const plan = fefo(lots.map((l) => ({ ...l, qty: Number(l.qty) })), amount);
+  if (!plan.length) return;
   // ponytail: sequential writes, no transaction; move into a Postgres function if two people tap at once often
   for (const p of plan) {
     await supabase.from("lots").update({ qty: p.left }).eq("id", p.id);
   }
   await supabase
     .from("usage_logs")
-    .insert(plan.map((p) => ({ lot_id: p.id, action: mode === "all" ? "finish" : "use", qty: p.take })));
+    .insert(plan.map((p) => ({ lot_id: p.id, action: amount >= total ? "finish" : "use", qty: p.take })));
+}
+
+/** −1 / ใช้ครึ่งหนึ่ง / หมดแล้ว across every lot of the same item, soonest-expiring first. */
+export async function consume(fridgeId: string, name: string, unit: string, mode: "one" | "half" | "all") {
+  await deduct(await createClient(), fridgeId, name, unit, (total) => (mode === "one" ? 1 : mode === "half" ? total / 2 : total));
+  done();
+}
+
+/** "ทำเมนูนี้แล้ว": the user confirmed/edited amounts per ingredient; each is deducted FEFO. */
+export async function cookMenu(fridgeId: string, fd: FormData) {
+  const supabase = await createClient();
+  const names = fd.getAll("name").map(String);
+  const units = fd.getAll("unit").map(String);
+  const qtys = fd.getAll("qty").map(Number);
+  for (const [i, name] of names.entries()) {
+    const qty = qtys[i];
+    if (Number.isFinite(qty) && qty > 0) await deduct(supabase, fridgeId, name, units[i], () => qty);
+  }
   done();
 }

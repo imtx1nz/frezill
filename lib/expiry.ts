@@ -40,3 +40,12 @@ export const byExpiry = (a: { expires_at: string | null }, b: { expires_at: stri
 
 export const thaiDate = (iso: string) =>
   new Date(iso + "T00:00:00Z").toLocaleDateString("th-TH", { day: "numeric", month: "short", timeZone: "UTC" });
+
+/** ISO instant of 00:00 today in the household's timezone (start of the daily AI-request window). */
+export function dayStartIn(tz = "Asia/Bangkok", now = new Date()) {
+  const off = new Intl.DateTimeFormat("en", { timeZone: tz, timeZoneName: "longOffset" })
+    .formatToParts(now)
+    .find((p) => p.type === "timeZoneName")!
+    .value.replace("GMT", "");
+  return new Date(`${todayIn(tz, now)}T00:00:00${off || "Z"}`).toISOString();
+}

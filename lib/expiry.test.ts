@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { byExpiry, daysLeft, expiryBadge, expiryStatus, thaiDate, todayIn } from "./expiry";
+import { byExpiry, dayStartIn, daysLeft, expiryBadge, expiryStatus, thaiDate, todayIn } from "./expiry";
 
 describe("todayIn (Asia/Bangkok day boundary)", () => {
   it("is already the next day in Bangkok at 17:00 UTC", () => {
@@ -56,4 +56,12 @@ it("byExpiry puts soonest first and no date last", () => {
 
 it("thaiDate does not shift the day", () => {
   expect(thaiDate("2026-10-05")).toBe("5 ต.ค.");
+});
+
+describe("dayStartIn", () => {
+  it("is Bangkok midnight (17:00 UTC the day before)", () => {
+    expect(dayStartIn("Asia/Bangkok", new Date("2026-10-04T16:59:00Z"))).toBe("2026-10-03T17:00:00.000Z");
+    expect(dayStartIn("Asia/Bangkok", new Date("2026-10-04T17:00:00Z"))).toBe("2026-10-04T17:00:00.000Z");
+  });
+  it("handles UTC", () => expect(dayStartIn("UTC", new Date("2026-10-04T05:00:00Z"))).toBe("2026-10-04T00:00:00.000Z"));
 });
