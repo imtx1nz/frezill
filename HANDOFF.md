@@ -20,6 +20,8 @@
   2. `git checkout main && git merge --ff-only bought-on && git push`
   3. `npx vercel deploy --prod`
   - ⚠️ branch `m1-invites` มี 0002 ของตัวเอง ต้อง renumber ก่อนใช้
+- ✅ วันที่ซื้อ (`lots.bought_on`, 0004 รันแล้ว, `19ec0db`): ไม่กรอก = วันนี้ (เวลาไทย), อนาคตไม่ได้, FEFO ถ้าวันหมดเท่ากัน/ไม่มี ตัดล็อตที่ซื้อก่อน · Tester ผ่านครบบน production · เล็กน้อย: ถ้าวันอนาคตหลุดถึง server จะขึ้น error กลาง ๆ ไม่ใช่ข้อความเฉพาะ
+- ✅ แก้บั๊ก AI "หมูสับ 100 กิโลกรัม" (`074c7e2`): `fitQty` แปลง กรัม↔กก. / มล.↔ลิตร และจำกัดไม่เกินของในตู้ (หน่วยแปลงไม่ได้ = 1) · เทส 49 ผ่าน · ยังไม่ได้ลองกับ Gemini จริงบน production (บัญชี QA โควตาวันนี้หมด)
 - ➡️ ถัดไป: ขอบเขต "ทำตอนนี้" เหลือ **แจ้งเตือน web push** (ยังไม่มีแถวในตาราง milestone) ถามผู้ใช้ก่อนว่าจะทำเป็น M6 ไหม
 - 🔧 QA ใช้บัญชี `frezill.qa.*` ได้ (สคริปต์ Playwright เดิมหาย ให้เขียนใหม่ด้วย playwright-core + chromium ใน `~/.cache/ms-playwright`)
 - 🔧 Supabase CLI ล็อกอินแล้ว: รัน migration ได้ด้วย `npx supabase db query --linked --project-ref wlprvlbdohsjjljrggpk -f <file>` (agent โดนบล็อกตอนแก้ production ต้องให้ผู้ใช้รันเองผ่าน `!`)
