@@ -38,6 +38,28 @@ describe("parseMenus (AI output gate)", () => {
   });
 });
 
+describe("steps", () => {
+  const step = (over = {}) => ({ text: "ผัดหมู", action: "fry", heat: "high", minutes: 3, ...over });
+  it("accepts object steps with optional heat/minutes", () => {
+    const r = parseMenus(ok(menu({ steps: [step(), { text: "ล้างผัก", action: "prep", heat: null }] })));
+    expect(r?.[0].steps[0]).toEqual(step());
+    expect(r?.[0].steps[1]).toEqual({ text: "ล้างผัก", action: "prep", heat: undefined, minutes: undefined });
+  });
+  it("normalizes old string steps", () => {
+    const r = parseMenus(ok(menu({ steps: ["หั่นหมู", "ทอดไข่"] })));
+    expect(r?.[0].steps).toEqual([
+      { text: "หั่นหมู", action: "cut", heat: undefined, minutes: undefined },
+      { text: "ทอดไข่", action: "fry", heat: undefined, minutes: undefined },
+    ]);
+  });
+  it("rejects bad action, heat, minutes and >10 steps", () => {
+    expect(parseMenus(ok(menu({ steps: [step({ action: "grill" })] })))).toBeNull();
+    expect(parseMenus(ok(menu({ steps: [step({ heat: "max" })] })))).toBeNull();
+    expect(parseMenus(ok(menu({ steps: [step({ minutes: 0 })] })))).toBeNull();
+    expect(parseMenus(ok(menu({ steps: Array(11).fill(step()) })))).toBeNull();
+  });
+});
+
 describe("normalize", () => {
   const items = [
     { name: "ไข่ไก่", unit: "ฟอง", qty: 4, urgent: true },

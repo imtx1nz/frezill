@@ -3,6 +3,15 @@ import { z } from "zod";
 /** Staples assumed to be in every Thai kitchen: usable in menus, never deducted, never "missing". */
 export const PANTRY = ["ข้าวสวย", "ข้าวสาร", "น้ำ", "น้ำมันพืช", "เกลือ", "น้ำตาล", "น้ำปลา", "ซีอิ๊วขาว", "ซอสหอยนางรม", "พริกไทย", "กระเทียม"];
 
+export const ACTIONS = ["prep", "cut", "mix", "fry", "boil", "steam", "bake", "season", "rest", "serve"] as const;
+export type Action = (typeof ACTIONS)[number];
+const nullish = <T extends z.ZodType>(t: T) => t.nullish().transform((v) => v ?? undefined);
+const objStep = z.object({ text: z.string().trim().min(1), action: z.enum(ACTIONS), heat: nullish(z.enum(["low", "medium", "high"])), minutes: nullish(z.number().int().positive().max(600)) });
+
+// Old cached/AI output had plain-string steps: guess the action from a Thai keyword.
+const GUESS: [RegExp, Action][] = [[/หั่น|สับ|ซอย|ปอก/, "cut"], [/ผสม|หมัก|คลุก|ตี/, "mix"], [/ผัด|ทอด|เจียว/, "fry"], [/ต้ม|ลวก|แกง/, "boil"], [/นึ่ง/, "steam"], [/อบ|ย่าง|ปิ้ง/, "bake"], [/ปรุง|เติม|ชิม/, "season"], [/พัก|รอ|แช่/, "rest"], [/เสิร์ฟ|ตัก|จัด|โรย/, "serve"]];
+const stepSchema = z.union([objStep, z.string().trim().min(1).transform((text) => ({ text, action: (GUESS.find(([re]) => re.test(text))?.[1] ?? "prep") as Action, heat: undefined, minutes: undefined }))]);
+
 const menuSchema = z.object({
   name: z.string().trim().min(1).max(80),
   uses_urgent: z.array(z.string().trim().min(1)),
@@ -10,7 +19,7 @@ const menuSchema = z.object({
   missing: z.array(z.string().trim().min(1)).max(2),
   minutes: z.number().int().positive().max(600),
   difficulty: z.enum(["ง่าย", "ปานกลาง", "ยาก"]),
-  steps: z.array(z.string().trim().min(1)).min(1).max(12),
+  steps: z.array(stepSchema).min(1).max(10),
 });
 export const aiOutputSchema = z.object({ menus: z.array(menuSchema).length(3) });
 
@@ -64,9 +73,10 @@ ${list}
 ของในครัวที่มีเสมอ: ${PANTRY.join(", ")}
 ${diet ? `ข้อจำกัดด้านอาหาร: ${diet}\n` : ""}กติกา:
 - คิดเมนูจากของอะไรก็ได้ในตู้ ไม่จำเป็นต้องใช้ของ [urgent] ถ้าใส่ของ [urgent] ได้อย่างลงตัวก็ดี และใส่ชื่อของ [urgent] ที่ใช้ใน uses_urgent (ไม่ได้ใช้ก็ให้เป็น [])
-- ingredients ใช้ชื่อให้ตรงกับรายการด้านบนทุกตัวอักษร ใช้หน่วยเดียวกับในตู้ และ qty ไม่เกินที่มี
+- ingredients ของจากตู้ใช้ชื่อให้ตรงกับรายการด้านบนทุกตัวอักษร ใช้หน่วยเดียวกับในตู้ และ qty ไม่เกินที่มี ส่วนของในครัวใช้หน่วยทำอาหารปกติ
 - ของที่ไม่มีในตู้และไม่ใช่ของในครัว ใส่ใน missing เท่านั้น (ไม่เกิน 2 อย่าง)
-- difficulty เป็น "ง่าย" "ปานกลาง" หรือ "ยาก" · minutes เป็นจำนวนเต็ม · steps สั้น กระชับ ไม่เกิน 8 ขั้น
+- difficulty เป็น "ง่าย" "ปานกลาง" หรือ "ยาก" · minutes เป็นจำนวนเต็ม · steps สั้น กระชับ ไม่เกิน 10 ขั้น แต่ละขั้นเป็น object: text (ภาษาไทย บอกสิ่งที่ทำจริง ๆ), action (prep ล้าง/เตรียม, cut หั่น/สับ, mix ผสม/หมัก, fry ผัด/ทอด, boil ต้ม/ลวก, steam นึ่ง, bake อบ/ย่าง, season ปรุงรส, rest พัก/รอ, serve จัดเสิร์ฟ), heat (low/medium/high เฉพาะขั้นที่ใช้ไฟ), minutes (เวลาของขั้นนั้น เป็นจำนวนเต็ม ถ้ามี)
+- ingredients ทุกตัว รวมของในครัว ต้องระบุ qty และ unit ที่ชัดเจน เช่น น้ำปลา 1 ช้อนโต๊ะ, กระเทียม 3 กลีบ, ไข่ไก่ 2 ฟอง
 - ตอบเป็นภาษาไทย`;
 }
 
@@ -97,7 +107,15 @@ const responseSchema = {
           missing: { ...LIST, maxItems: 2 },
           minutes: { type: "INTEGER" },
           difficulty: { type: "STRING", enum: ["ง่าย", "ปานกลาง", "ยาก"] },
-          steps: LIST,
+          steps: {
+            type: "ARRAY",
+            maxItems: 10,
+            items: {
+              type: "OBJECT",
+              required: ["text", "action"],
+              properties: { text: S, action: { type: "STRING", enum: [...ACTIONS] }, heat: { type: "STRING", enum: ["low", "medium", "high"], nullable: true }, minutes: { type: "INTEGER", nullable: true } },
+            },
+          },
         },
       },
     },

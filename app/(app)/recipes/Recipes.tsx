@@ -5,7 +5,7 @@ import { ChefHat, Clock, Gauge, Info, TriangleAlert } from "lucide-react";
 import { Notice } from "@/components/auth/Notice";
 import { PendingButton } from "@/components/inventory/PendingButton";
 import { IngredientPicture } from "@/components/IngredientPicture";
-import { QtyBadge, ToneBadge, fmt } from "@/components/home/status";
+import { ToneBadge, fmt } from "@/components/home/status";
 import { catalogMatch, type Category } from "@/lib/catalog";
 import type { HomeTone } from "@/lib/expiry";
 import { cookMenu } from "../fridge/actions";
@@ -14,6 +14,8 @@ import { suggest, type State } from "./actions";
 export type Known = Record<string, { category: Category; tone: HomeTone; expires_at: string | null }>;
 
 const metaChip = "inline-flex items-center gap-1 rounded-full bg-ice px-2.5 py-0.5 text-[0.9375rem] font-medium text-ink-2";
+
+const HEAT = { low: [1, "ไฟอ่อน"], medium: [2, "ไฟกลาง"], high: [3, "ไฟแรง"] } as const;
 
 export function Recipes({ known, today }: { known: Known; today: string }) {
   const [state, action, pending] = useActionState<State>(suggest, {});
@@ -96,13 +98,13 @@ export function Recipes({ known, today }: { known: Known; today: string }) {
                       {g.inFridge && known[g.name] && (
                         <ToneBadge tone={known[g.name].tone} expiresAt={known[g.name].expires_at} today={today} className="absolute -left-1 -top-1 z-[2]" />
                       )}
-                      <QtyBadge n={g.qty} className="!-bottom-0.5 !-right-0.5" />
                     </span>
                     <span className="min-w-0 flex-1 leading-snug">
                       <span className="block font-semibold">{g.name}</span>
-                      <span className="block text-[0.9375rem] text-ink-2">
-                        {fmt(g.qty)} {g.unit} · {g.inFridge ? "ในตู้" : "ของในครัว"}
-                      </span>
+                      <span className="block text-[0.9375rem] text-ink-2">{g.inFridge ? "ในตู้" : "ของในครัว"}</span>
+                    </span>
+                    <span className="shrink-0 text-right font-display text-[1.0625rem] font-semibold text-ink">
+                      {fmt(g.qty)} {g.unit}
                     </span>
                   </li>
                 ))}
@@ -117,19 +119,39 @@ export function Recipes({ known, today }: { known: Known; today: string }) {
                           <IngredientPicture name={n} category={cat(n)} size={48} className="opacity-70" />
                         </span>
                         <span className="min-w-0 flex-1">{n}</span>
-                        <span className="text-[0.9375rem] text-ink-2">ซื้อเพิ่ม</span>
+                        <span className="rounded-full bg-urgent-soft px-2.5 py-0.5 text-[0.9375rem] font-semibold text-urgent-ink">ต้องซื้อ</span>
                       </li>
                     ))}
                   </ul>
                 </>
               )}
-              <ol className="mt-4 flex flex-col gap-2 leading-relaxed">
-                {m.steps.map((s, j) => (
+              <ol className="mt-4 flex flex-col gap-3">
+                {m.steps.map((st, j) => (
                   <li key={j} className="flex gap-3">
-                    <span className="grid size-7 shrink-0 place-items-center rounded-full border-2 border-outline bg-wall font-display font-semibold text-ink">
-                      {j + 1}
+                    <span className="relative shrink-0">
+                      <img src={`/steps/${st.action}.svg`} alt="" width={44} height={44} className="size-11 rounded-2xl border-2 border-outline bg-wall p-1.5" />
+                      <span className="absolute -left-1.5 -top-1.5 grid size-6 place-items-center rounded-full border-2 border-outline bg-white font-display text-[0.875rem] font-semibold leading-none">{j + 1}</span>
                     </span>
-                    <span className="pt-0.5">{s}</span>
+                    <span className="min-w-0 flex-1 leading-snug">
+                      <span className="block pt-0.5 font-medium">{st.text}</span>
+                      {(st.heat || st.minutes) && (
+                        <span className="mt-1.5 flex flex-wrap gap-1.5">
+                          {st.heat && (
+                            <span className={metaChip}>
+                              {Array.from({ length: HEAT[st.heat][0] }, (_, k) => (
+                                <img key={k} src="/steps/heat.svg" alt="" width={16} height={16} className="-mr-0.5 size-4" />
+                              ))}
+                              {HEAT[st.heat][1]}
+                            </span>
+                          )}
+                          {st.minutes && (
+                            <span className={metaChip}>
+                              <img src="/steps/time.svg" alt="" width={16} height={16} className="size-4" /> {st.minutes} นาที
+                            </span>
+                          )}
+                        </span>
+                      )}
+                    </span>
                   </li>
                 ))}
               </ol>
