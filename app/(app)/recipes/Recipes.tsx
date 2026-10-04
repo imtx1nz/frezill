@@ -39,6 +39,23 @@ export function Recipes({ known, today }: { known: Known; today: string }) {
         ))}
       {pending && <p className="sr-only" role="status">กำลังคิดเมนู</p>}
 
+      {!pending && !state.menus && !state.error && (
+        <section
+          aria-label="ยังไม่มีเมนู"
+          className="card-game flex min-h-64 flex-1 flex-col items-center justify-center gap-5 border-dashed px-6 py-8 text-center"
+        >
+          <div aria-hidden="true" className="relative flex items-end pt-3">
+            <IngredientPicture name="ไข่ไก่" category="dairy_egg" size={72} className="-rotate-6" />
+            <IngredientPicture name="คะน้า" category="veg" size={96} className="z-[1] mx-1 -translate-y-2" />
+            <IngredientPicture name="หมูสับ" category="meat" size={72} className="rotate-6" />
+            <span className="absolute -top-3 right-[72px] z-[2] grid size-11 translate-x-1/2 place-items-center rounded-full border-[length:var(--ow-md)] border-outline bg-wall text-outline shadow-[0_3px_0_var(--outline)]">
+              <ChefHat className="size-6" strokeWidth={2.5} />
+            </span>
+          </div>
+          <p className="max-w-[20rem] font-medium text-ink-2">กดปุ่มด้านบน แล้ว AI จะหยิบของในตู้มาคิดเป็นเมนูให้ ของใกล้หมดได้ไปก่อน</p>
+        </section>
+      )}
+
       {!pending &&
         state.menus?.map((m, i) => {
           const own = m.ingredients.filter((g) => g.inFridge);

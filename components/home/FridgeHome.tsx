@@ -329,8 +329,11 @@ export function FridgeHome({
       <div aria-hidden="true" className="fixed inset-0 -z-10 bg-wall" />
 
       <header className="flex items-start justify-between gap-3 lg:[grid-area:head]">
-        <div className="min-w-0">
-          <h1 className="font-display text-[1.75rem] font-semibold leading-[1.15] tracking-[-0.01em] text-ink [overflow-wrap:anywhere] lg:text-[2.25rem] lg:leading-[1.1]">
+        <div className="min-w-0 lg:max-w-[280px]">
+          <h1
+            title={name}
+            className="line-clamp-2 font-display text-[1.75rem] font-semibold leading-[1.15] tracking-[-0.01em] text-ink [overflow-wrap:anywhere]"
+          >
             สวัสดี {name}
           </h1>
           <p className="text-[0.9375rem] font-medium text-wall-ink">
@@ -411,8 +414,8 @@ export function FridgeHome({
                   <li key={i.key}>
                     <Link href={`/item/${i.soon.id}`} className="flex min-h-14 items-center gap-3 py-1 hover:text-brand-ink">
                       <IngredientPicture name={i.soon.name} category={i.soon.category} size={48} />
-                      <span className="min-w-0 flex-1 truncate font-medium">{i.soon.name}</span>
-                      <ExpiryBadge expiresAt={i.soon.expires_at} today={today} />
+                      <span className="line-clamp-2 min-w-0 flex-1 font-medium leading-snug [overflow-wrap:anywhere]">{i.soon.name}</span>
+                      <ExpiryBadge expiresAt={i.soon.expires_at} today={today} compact />
                     </Link>
                   </li>
                 ))}

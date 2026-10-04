@@ -50,7 +50,7 @@ export function TabBar({ ai, signOut }: { ai: boolean; signOut: () => Promise<vo
       {/* phone tab bar */}
       <nav
         aria-label="แท็บหลัก"
-        className="panel fixed inset-x-0 bottom-0 z-40 flex h-[var(--tabbar-h)] !rounded-b-none !border-x-0 !border-b-0 pb-[env(safe-area-inset-bottom)] !shadow-[inset_0_2px_0_var(--panel-rim)] lg:hidden"
+        className="panel tabbar fixed inset-x-0 bottom-0 z-40 flex h-[var(--tabbar-h)] !rounded-b-none !border-x-0 !border-b-0 pb-[env(safe-area-inset-bottom)] !shadow-[inset_0_2px_0_var(--panel-rim)] lg:hidden"
       >
         {tabs.map(({ href, label, Icon, match }) => {
           const on = active(match);

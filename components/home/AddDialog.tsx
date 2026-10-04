@@ -13,7 +13,7 @@ import type { HomeItem } from "@/lib/home";
 import { fmt } from "./status";
 
 const field =
-  "h-11 rounded-xl border-2 border-outline bg-white px-3 text-base text-ink outline-none focus:shadow-[0_0_0_3px_var(--brand-soft)]";
+  "h-11 min-w-0 appearance-none rounded-xl border-2 border-outline bg-white px-3 text-base text-ink outline-none shadow-[inset_0_3px_0_rgb(27_31_59/0.08),0_2px_0_var(--outline)] focus:shadow-[inset_0_3px_0_rgb(27_31_59/0.08),0_2px_0_var(--outline),0_0_0_4px_var(--brand-soft)] [&::-webkit-calendar-picker-indicator]:opacity-70";
 const step = "grid size-11 shrink-0 place-items-center rounded-xl border-2 border-outline bg-white text-outline shadow-[0_2px_0_var(--outline)] active:translate-y-0.5 active:shadow-none";
 
 /** Short add form (§6): native <dialog>, preset zone, guessed expiry from catalog shelf life. */
@@ -147,7 +147,7 @@ export function AddDialog({
               {manual === null ? `≈ เดา จากอายุเก็บ ${shelfDays(cat, zone)} วัน` : "แก้เอง"}
             </span>
           </span>
-          <input name="expires_at" type="date" value={expires} onChange={(e) => setManual(e.target.value)} className={field} />
+          <input name="expires_at" type="date" value={expires} onChange={(e) => setManual(e.target.value)} className={`${field} w-full`} />
         </label>
         <label className="flex flex-col gap-1.5 text-[0.9375rem] font-semibold">
           วันที่ซื้อ
@@ -157,7 +157,7 @@ export function AddDialog({
             max={today}
             value={bought}
             onChange={(e) => setBought(e.target.value || today)}
-            className={field}
+            className={`${field} w-full`}
           />
         </label>
 

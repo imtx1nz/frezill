@@ -85,8 +85,8 @@ export function SideBar({
       data-sheet={sheet}
       className={`panel fixed inset-x-0 bottom-[var(--tabbar-h)] z-30 flex h-[70dvh] flex-col !rounded-b-none !border-x-0 !border-b-0 transition-transform duration-200 ease-[var(--ease-out)] ${
         expanded ? "" : "translate-y-[calc(70dvh-var(--peek))]"
-      } lg:inset-x-auto lg:bottom-auto lg:right-0 lg:top-[88px] lg:h-[calc(100dvh-112px)] lg:w-[340px] lg:translate-y-0 lg:!rounded-l-[24px] lg:!rounded-r-none lg:!border-b-[length:var(--ow-lg)] lg:!border-l-[length:var(--ow-lg)] lg:!border-r-0 lg:duration-[240ms] ${
-        collapsed ? "lg:translate-x-full" : ""
+      } lg:inset-x-auto lg:bottom-auto lg:right-4 lg:top-[80px] lg:h-auto lg:max-h-[calc(100vh-100px)] lg:w-[340px] lg:translate-y-0 lg:!rounded-[24px] lg:!border-[length:var(--ow-lg)] lg:duration-[240ms] ${
+        collapsed ? "lg:translate-x-[calc(100%+16px)]" : ""
       }`}
     >
       {/* desktop collapse tab */}

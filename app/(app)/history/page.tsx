@@ -7,7 +7,7 @@ import { IngredientPicture } from "@/components/IngredientPicture";
 import { fmt } from "@/components/home/status";
 import type { Category } from "@/lib/catalog";
 import { dayStartIn, daysLeft, todayIn } from "@/lib/expiry";
-import { dayLabel, groupByDay, minusDays, type HistoryEvent, type HistoryKind } from "@/lib/history";
+import { collapseRuns, dayLabel, groupByDay, minusDays, type HistoryEvent, type HistoryKind } from "@/lib/history";
 
 export const metadata: Metadata = { title: "ประวัติ" };
 
@@ -99,7 +99,7 @@ export default async function HistoryPage({ searchParams }: PageProps<"/history"
       live: Number(u.lots.qty) > 0,
     })),
   ];
-  const shown = all.filter((e) => !type || e.kind === type || (type === "use" && e.kind === "finish"));
+  const shown = collapseRuns(all.filter((e) => !type || e.kind === type || (type === "use" && e.kind === "finish")));
   const days = groupByDay(shown, tz);
 
   // "7 วันนี้" card (current window only)

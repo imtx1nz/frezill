@@ -44,3 +44,27 @@ export function minusDays(day: string, n: number) {
   d.setUTCDate(d.getUTCDate() - n);
   return d.toISOString().slice(0, 10);
 }
+
+/**
+ * Collapse a burst of identical actions into one row: same lot + action + person + reason,
+ * each within `windowMin` of the previous one → one event with the summed qty and the latest time.
+ * Newest-first in, newest-first out.
+ */
+export function collapseRuns<T extends HistoryEvent>(events: T[], windowMin = 10): T[] {
+  const out: T[] = [];
+  const open = new Map<string, { row: T; oldest: number }>();
+  for (const e of [...events].sort((a, b) => b.at.localeCompare(a.at))) {
+    const key = [e.lotId, e.kind, e.who, e.reason ?? ""].join("|");
+    const t = Date.parse(e.at);
+    const run = open.get(key);
+    if (run && run.oldest - t <= windowMin * 60_000) {
+      run.row.qty += e.qty;
+      run.oldest = t;
+      continue;
+    }
+    const row = { ...e };
+    out.push(row);
+    open.set(key, { row, oldest: t });
+  }
+  return out;
+}

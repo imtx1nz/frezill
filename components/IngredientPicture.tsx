@@ -1,4 +1,4 @@
-import { blockLabel, pictureId, type Category, type PictureSize } from "@/lib/catalog";
+import { blockLabel, catalogExact, pictureId, type Category, type PictureSize } from "@/lib/catalog";
 import manifest from "@/lib/ingredients-manifest.json";
 
 const FILES = manifest as Record<string, "svg" | "png">;
@@ -15,7 +15,7 @@ const COLORS: Record<Category, [bg: string, ink: string]> = {
   cooked: ["#DCEFE6", "#075F47"],
   other: ["#ECE9E4", "#45403A"],
 };
-const TYPE = { 48: [14, 14], 56: [16, 15], 72: [20, 18], 96: [26, 22] } as const; // radius, font px
+const TYPE = { 48: [14, 14], 56: [16, 15], 64: [18, 16], 72: [20, 18], 96: [26, 22] } as const; // radius, font px
 
 /** Art file path if one exists (from the build-time manifest, so no 404 probing), else null. */
 export function pictureFile(name: string, category: Category) {
@@ -58,7 +58,9 @@ export function IngredientPicture({
         style={{ width: size, height: size }}
       />
     );
-  const [bg, ink] = COLORS[category] ?? COLORS.other;
+  // Lots saved as "อื่น ๆ" still get their catalog colour, so the fridge isn't all grey.
+  const tint = category === "other" ? (catalogExact(name)?.category ?? category) : category;
+  const [bg, ink] = COLORS[tint] ?? COLORS.other;
   const [radius, font] = TYPE[size];
   return (
     <span
