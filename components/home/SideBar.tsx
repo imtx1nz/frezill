@@ -61,10 +61,10 @@ export function SideBar({
     const el = sheetRef.current;
     if (!g || !el) return;
     g.dy = e.clientY - g.y;
-    const travel = el.offsetHeight - 156;
+    const travel = el.offsetHeight - 172; // --peek
     const base = expanded ? 0 : travel;
     el.style.transition = "none";
-    el.style.transform = `translateY(${Math.min(Math.max(base + g.dy, 0), travel)}px)`;
+    el.style.translate = `0 ${Math.min(Math.max(base + g.dy, 0), travel)}px`; // inline wins over the class
   };
   const onGrabUp = () => {
     const g = grab.current;
@@ -72,7 +72,7 @@ export function SideBar({
     grab.current = null;
     if (!g || !el) return;
     el.style.transition = "";
-    el.style.transform = "";
+    el.style.translate = "";
     if (Math.abs(g.dy) < 6) setSheet(expanded ? "peek" : "expanded");
     else setSheet(g.dy < 0 ? "expanded" : "peek");
   };
@@ -84,7 +84,7 @@ export function SideBar({
       aria-label="แถบวัตถุดิบ"
       data-sheet={sheet}
       className={`panel fixed inset-x-0 bottom-[var(--tabbar-h)] z-30 flex h-[70dvh] flex-col !rounded-b-none !border-x-0 !border-b-0 transition-transform duration-200 ease-[var(--ease-out)] ${
-        expanded ? "" : "translate-y-[calc(70dvh-156px)]"
+        expanded ? "" : "translate-y-[calc(70dvh-var(--peek))]"
       } lg:inset-x-auto lg:bottom-auto lg:right-0 lg:top-[88px] lg:h-[calc(100dvh-112px)] lg:w-[340px] lg:translate-y-0 lg:!rounded-l-[24px] lg:!rounded-r-none lg:!border-b-[length:var(--ow-lg)] lg:!border-l-[length:var(--ow-lg)] lg:!border-r-0 lg:duration-[240ms] ${
         collapsed ? "lg:translate-x-full" : ""
       }`}
@@ -111,7 +111,7 @@ export function SideBar({
         onPointerMove={onGrabMove}
         onPointerUp={onGrabUp}
         onPointerCancel={onGrabUp}
-        className="grid h-7 shrink-0 touch-none place-items-center lg:hidden"
+        className="grid h-6 shrink-0 touch-none place-items-center lg:hidden"
       >
         <span className="h-[5px] w-10 rounded-full bg-white/60" />
       </button>
@@ -158,7 +158,7 @@ export function SideBar({
         </div>
       ) : (
         <ul
-          className={`min-h-0 flex-1 gap-2.5 overscroll-contain p-3 pb-4 lg:grid lg:grid-cols-3 lg:content-start lg:overflow-y-auto ${
+          className={`min-h-0 flex-1 gap-2.5 overscroll-contain px-3 pb-4 pt-2.5 lg:grid lg:grid-cols-3 lg:content-start lg:overflow-y-auto ${
             expanded ? "grid grid-cols-3 content-start overflow-y-auto" : "flex overflow-x-auto"
           }`}
         >
@@ -183,9 +183,16 @@ export function SideBar({
                   }
                 }}
                 onContextMenu={(e) => e.preventDefault()}
-                className={`tile aspect-square w-full cursor-grab ${expanded ? "touch-pan-y" : "touch-pan-x"} lg:touch-pan-y`}
+                className={`tile aspect-square w-full cursor-grab gap-1 ${expanded ? "touch-pan-y" : "touch-pan-x"} lg:touch-pan-y`}
               >
-                <IngredientPicture name={c.name} category={c.category} size={56} className="mt-1.5 max-lg:scale-[.86]" />
+                {expanded ? (
+                  <IngredientPicture name={c.name} category={c.category} size={56} className="mt-1.5" />
+                ) : (
+                  <>
+                    <IngredientPicture name={c.name} category={c.category} size={48} className="mt-1 lg:hidden" />
+                    <IngredientPicture name={c.name} category={c.category} size={56} className="mt-1.5 max-lg:hidden" />
+                  </>
+                )}
                 <span className="w-full truncate px-1.5 text-center text-[0.875rem] font-semibold leading-tight">{c.name}</span>
               </div>
               <button

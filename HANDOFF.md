@@ -1,6 +1,6 @@
 # HANDOFF — frezill
 
-**อัปเดต:** 2026-10-04 (M5 ขึ้น production แล้ว) · กฎการพัฒนาอยู่ที่ `.claude/skills/frezill-dev/SKILL.md`
+**อัปเดต:** 2026-10-04 (UI Fridge Home อยู่ที่ branch `ui-fridge-home`) · กฎการพัฒนาอยู่ที่ `.claude/skills/frezill-dev/SKILL.md`
 
 ## สถานะ
 - ✅ M0: Next.js 16 + Tailwind 4 + Supabase client + Vitest, deploy แล้วที่ https://frezill.vercel.app (Vercel project `frezill`)
@@ -26,6 +26,14 @@
 - ➡️ ถัดไป: ขอบเขต "ทำตอนนี้" เหลือ **แจ้งเตือน web push** (ยังไม่มีแถวในตาราง milestone) ถามผู้ใช้ก่อนว่าจะทำเป็น M6 ไหม
 - 🔧 QA ใช้บัญชี `frezill.qa.*` ได้ (สคริปต์ Playwright เดิมหาย ให้เขียนใหม่ด้วย playwright-core + chromium ใน `~/.cache/ms-playwright`)
 - 🔧 Supabase CLI ล็อกอินแล้ว: รัน migration ได้ด้วย `npx supabase db query --linked --project-ref wlprvlbdohsjjljrggpk -f <file>` (agent โดนบล็อกตอนแก้ production ต้องให้ผู้ใช้รันเองผ่าน `!`)
+
+- 🚧 branch `ui-fridge-home` (push แล้ว, **ยังไม่ merge/deploy**, ไม่มี migration ใหม่): หน้าแรกใหม่ตาม `docs/design/fridge-home.md`
+  - ส่งแล้ว: แท็บ 3 อัน (ตู้เย็น / ประวัติ / เมนู AI; ไม่มี key = ซ่อนแท็บ AI) · ตู้เย็นแบบเกม วางของจริงตามโซน+หมวด · แถบวัตถุดิบ 30 อย่าง (เลือกหมวด + ค้นหา + ปุ่มพับบน desktop, bottom sheet บนมือถือ) พื้นหลังเป็น **glass** (navy โปร่ง blur 12px, เครื่องไม่รองรับ = navy ทึบ) ใช้ทั้งแถบวัตถุดิบและแถบแท็บ · การ์ดรายละเอียด (hover บน desktop, แตะบนมือถือ, Enter บนคีย์บอร์ด) · ลากของเข้าตู้ (เมาส์ลากเลย, มือถือกดค้าง 350ms) → ฟอร์มสั้น เดาวันหมดอายุจากอายุเก็บ (`expiry_guessed`) วันที่ซื้อ = วันนี้ → `addLotFromHome` · ปุ่ม "+" บนแต่ละช่อง = ทางเลือกไม่ต้องลาก · แมลงวัน (≤3 วัน/หมดอายุ, รวมไม่เกิน 6 ตัว, หยุดตอนลาก/เปิดฟอร์ม, reduced-motion = ตัวนิ่ง) · หน้า `/history` (จาก lots + usage_logs แยกตามวัน, กรอง, ดูเก่ากว่านี้) · `/recipes` แต่งใหม่ (logic เดิม) · /fridge มีรูป + ปุ่มออกจากระบบ (มือถือ)
+  - **รูปวัตถุดิบ:** ทุกที่ใช้ `components/IngredientPicture.tsx` ลำดับ `public/ingredients/<id>.svg` → `<id>.png` → `cat-<หมวด>.svg|png` → สติกเกอร์ตัวหนังสือ (ตอนนี้ยังไม่มีไฟล์รูป = สติกเกอร์ทั้งหมด) · ไม่ยิง 404: `scripts/ingredients-manifest.mjs` (รันเองตอน `npm run dev`/`npm run build`) เขียนรายชื่อไฟล์ที่มีจริงลง `lib/ingredients-manifest.json`
+  - **เพิ่มรูป:** วางไฟล์ 512×512 พื้นใส ชื่อ = id ในตาราง `lib/catalog.ts` (เช่น `egg.svg`, `pork-minced.png`) หรือ `cat-veg.svg` ฯลฯ ลงใน `public/ingredients/` → `npm run dev` หรือ `node scripts/ingredients-manifest.mjs` (manifest จะมี id นั้น) → commit ทั้งรูปและ manifest → deploy ไม่ต้องแก้โค้ด (คู่มือวาด: spec §4.5)
+  - เช็กแล้ว: test/tsc/lint/build ผ่าน, ลองบน `npm run dev` + บัญชี QA: hover/แตะการ์ด, ลากด้วยเมาส์และนิ้ว (CDP touch) → บันทึกจริง, "+", พับแถบ, ขยาย sheet · ยังไม่ได้: ลองบนมือถือจริง, trace FPS, `impeccable detect`, กดบน production
+  - ที่เบี่ยงจาก spec: ใช้ glass (ผู้ใช้สั่ง) · รวมของเป็นชิ้นเดียวด้วย ชื่อ+หน่วย+โซน (ไม่ใช่แค่ชื่อ+หน่วย) · ป้ายสติกเกอร์ใช้ `short` เฉพาะชื่อที่ตรงเป๊ะ · จับคู่ชื่อแบบ "มีคำนี้อยู่" ต้องตรงขอบคำไทย (กัน "นม" ใน "ขนมปัง") · ชื่อหมวดใช้ของเดิมใน `lib/inventory.ts` · ตู้ desktop กว้าง 440px (สเปก 520 ไม่พอที่ 1280)
+  - รู้แล้วว่าเล็กน้อย: แก้ล็อตที่หน้า /item แล้ว `expiry_guessed` จะกลายเป็น false · คนที่ role viewer ยังเห็นปุ่มใน /fridge (เหมือนเดิม)
 
 ## ขั้นขึ้น production M5 (ทำเสร็จแล้ว)
 0. [ ] ทำให้ Gemini key ใช้ได้ก่อน (ดู ⛔ ด้านบน) คำสั่งเช็กต้องได้ `200` · ถ้าจะใช้รุ่นอื่นไม่ต้องแก้โค้ด ตั้ง env `GEMINI_MODEL` (ค่าเริ่มต้น `gemini-3.8-flash`)

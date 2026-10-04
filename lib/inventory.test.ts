@@ -89,3 +89,12 @@ describe("lotSchema expires_at", () => {
     expect(lotSchema.safeParse({ ...base, expires_at: "5/10/2026" }).success).toBe(false);
   });
 });
+
+describe("lotSchema expiry_guessed", () => {
+  const base = { name: "ไข่ไก่", qty: "1", unit: "ฟอง", category: "dairy_egg", zone: "chill", expires_at: "2026-10-25", bought_on: "" };
+  it('is true only for "1" (absent on the old forms = false)', () => {
+    expect(lotSchema.parse({ ...base, expiry_guessed: "1" }).expiry_guessed).toBe(true);
+    expect(lotSchema.parse({ ...base, expiry_guessed: "0" }).expiry_guessed).toBe(false);
+    expect(lotSchema.parse({ ...base, expiry_guessed: null }).expiry_guessed).toBe(false);
+  });
+});

@@ -322,7 +322,7 @@ export function FridgeHome({
   return (
     <main
       data-busy={drag || form ? "" : undefined}
-      className={`relative flex w-full flex-1 flex-col gap-4 px-4 pt-5 ${canWrite ? "pb-[184px]" : "pb-8"} lg:mx-auto lg:grid lg:max-w-[1280px] lg:grid-cols-[280px_1fr] lg:grid-rows-[auto_auto_auto_auto_1fr] lg:gap-x-10 lg:gap-y-5 lg:pl-8 lg:pb-8 lg:pt-2 lg:[grid-template-areas:'head_fridge''chips_fridge''ai_fridge''list_fridge''rest_fridge'] ${
+      className={`relative flex w-full flex-1 flex-col gap-4 px-4 pt-5 ${canWrite ? "pb-[calc(var(--peek)+24px)]" : "pb-8"} lg:mx-auto lg:grid lg:max-w-[1280px] lg:grid-cols-[280px_1fr] lg:grid-rows-[auto_auto_auto_auto_1fr] lg:gap-x-10 lg:gap-y-5 lg:pl-8 lg:pb-8 lg:pt-2 lg:[grid-template-areas:'head_fridge''chips_fridge''ai_fridge''list_fridge''rest_fridge'] ${
         canWrite ? (collapsed ? "lg:pr-[60px]" : "lg:pr-[372px]") : "lg:pr-8"
       }`}
     >
@@ -330,7 +330,7 @@ export function FridgeHome({
 
       <header className="flex items-start justify-between gap-3 lg:[grid-area:head]">
         <div className="min-w-0">
-          <h1 className="font-display text-[1.75rem] font-semibold leading-[1.15] tracking-[-0.01em] text-ink lg:text-[2.25rem] lg:leading-[1.1]">
+          <h1 className="font-display text-[1.75rem] font-semibold leading-[1.15] tracking-[-0.01em] text-ink [overflow-wrap:anywhere] lg:text-[2.25rem] lg:leading-[1.1]">
             สวัสดี {name}
           </h1>
           <p className="text-[0.9375rem] font-medium text-wall-ink">

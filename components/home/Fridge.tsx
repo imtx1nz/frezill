@@ -50,7 +50,7 @@ export function Fridge({ freezerRef, chillRef, ...p }: FridgeProps) {
       aria-label="ในตู้เย็น"
       className="mx-auto w-full max-w-[480px] [perspective:1200px] lg:max-w-[440px] lg:[perspective:1400px]"
     >
-      <div className="fridge-cab relative h-[clamp(400px,calc(100dvh-150px-156px-var(--tabbar-h)-24px),600px)] [transform-style:preserve-3d] [transform:rotateX(2deg)] lg:h-[clamp(560px,calc(100dvh-120px),720px)] lg:[transform:rotateY(-8deg)_rotateX(3deg)]">
+      <div className="fridge-cab relative h-[clamp(400px,calc(100dvh-150px-var(--peek)-var(--tabbar-h)-24px),600px)] [transform-style:preserve-3d] [transform:rotateX(2deg)] lg:h-[clamp(560px,calc(100dvh-120px),720px)] lg:[transform:rotateY(-8deg)_rotateX(3deg)]">
         <div ref={chillRef} className="fridge-in grid h-full grid-cols-[1fr_64px] lg:grid-cols-1 lg:[transform-style:preserve-3d]">
           <div className="relative z-[1] flex min-h-0 flex-col gap-1.5 p-2">
             {/* freezer */}
@@ -179,7 +179,7 @@ function Item({ item, ...p }: Props & { item: HomeItem }) {
           {l.name}
         </span>
       )}
-      <ToneBadge tone={item.tone} expiresAt={l.expires_at} today={p.today} className="absolute -right-2 -top-2 z-[2]" />
+      <ToneBadge tone={item.tone} expiresAt={l.expires_at} today={p.today} className="absolute -right-3 -top-3.5 z-[2]" />
       {item.lots.length > 1 && (
         <span
           aria-hidden="true"

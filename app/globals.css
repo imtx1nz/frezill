@@ -55,6 +55,7 @@
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
   --tabbar-h: calc(64px + env(safe-area-inset-bottom));
+  --peek: 172px;
 }
 
 @theme inline {
@@ -137,9 +138,11 @@ a {
   }
   @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     .panel {
-      background: rgb(34 48 94 / 0.8);
-      -webkit-backdrop-filter: blur(10px) saturate(1.4);
-      backdrop-filter: blur(10px) saturate(1.4);
+      /* backdrop is greyed + darkened first so yellow behind never turns the navy olive;
+         worst case (white behind) white text stays ≥ 9:1 */
+      background: rgb(34 48 94 / 0.72);
+      -webkit-backdrop-filter: blur(12px) grayscale(1) brightness(0.55);
+      backdrop-filter: blur(12px) grayscale(1) brightness(0.55);
     }
   }
   .panel-well {
