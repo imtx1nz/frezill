@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { fefo, lotSchema } from "@/lib/inventory";
 
-const fields = (fd: FormData) => Object.fromEntries(["name", "qty", "unit", "category", "zone", "expires_at", "bought_on"].map((k) => [k, fd.get(k)]));
+const fields = (fd: FormData) => Object.fromEntries(["name", "qty", "unit", "category", "zone", "expires_at", "expiry_guessed", "bought_on"].map((k) => [k, fd.get(k)]));
 
 function done(): never {
   revalidatePath("/fridge");
@@ -22,6 +22,25 @@ export async function addLot(fd: FormData) {
   const { error } = await supabase.from("lots").insert({ ...parsed.data, fridge_id: fridge.id });
   if (error) redirect("/fridge/add?error=1");
   done();
+}
+
+export type AddState = { ok?: true; id?: string; error?: string };
+
+/** Fridge Home add form: same validation as addLot, but returns instead of redirecting. */
+export async function addLotFromHome(_prev: AddState, fd: FormData): Promise<AddState> {
+  const parsed = lotSchema.safeParse(fields(fd));
+  if (!parsed.success) return { error: "บันทึกไม่สำเร็จ ลองอีกครั้ง" };
+  const supabase = await createClient();
+  const { data: fridge } = await supabase.from("fridges").select("id").order("created_at").limit(1).maybeSingle();
+  if (!fridge) return { error: "บันทึกไม่สำเร็จ ลองอีกครั้ง" };
+  const { data, error } = await supabase
+    .from("lots")
+    .insert({ ...parsed.data, fridge_id: fridge.id })
+    .select("id")
+    .single();
+  if (error || !data) return { error: "บันทึกไม่สำเร็จ ลองอีกครั้ง" };
+  revalidatePath("/today");
+  return { ok: true, id: data.id };
 }
 
 export async function updateLot(id: string, fd: FormData) {

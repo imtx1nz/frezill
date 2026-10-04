@@ -23,6 +23,8 @@ export const lotSchema = z.object({
   zone: z.enum(["chill", "freezer"]),
   // "" from an empty <input type="date"> = no expiry date
   expires_at: z.preprocess((v) => v || null, z.iso.date().nullable()),
+  // "1" only when the date came from the catalog guess and the user didn't edit it
+  expiry_guessed: z.preprocess((v) => v === "1", z.boolean()),
   // blank = bought today (Bangkok); never null, never in the future
   bought_on: z.preprocess(
     (v) => v || todayIn(),

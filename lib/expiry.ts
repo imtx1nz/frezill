@@ -49,3 +49,12 @@ export function dayStartIn(tz = "Asia/Bangkok", now = new Date()) {
     .value.replace("GMT", "");
   return new Date(`${todayIn(tz, now)}T00:00:00${off || "Z"}`).toISOString();
 }
+
+export type HomeTone = "fresh" | "week" | "urgent" | "expired" | "none";
+
+/** Fridge Home tone: urgent = 0–3 days, week = 4–7. Separate from expiryStatus (notifications depend on that). */
+export function homeTone(expiresAt: string | null, today: string): HomeTone {
+  if (!expiresAt) return "none";
+  const d = daysLeft(expiresAt, today);
+  return d < 0 ? "expired" : d <= 3 ? "urgent" : d <= 7 ? "week" : "fresh";
+}

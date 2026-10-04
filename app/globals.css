@@ -14,8 +14,47 @@
   --danger-soft: #fdecea;
   --warn: #c2620c;
   --warn-soft: #fff1e2;
-  --soon: #a77b06;
+  --soon: #6b5000;
   --soon-soft: #fff7d6;
+
+  /* Fridge Home (docs/design/fridge-home.md §2) */
+  --wall: #ffd23f;
+  --wall-ink: #3d2f00;
+  --cab: #f6fbf8;
+  --cab-in-top: #e3f1ea;
+  --cab-in-bot: #d2e7dc;
+  --freezer: #c7e2f0;
+  --freezer-ink: #24506a;
+  --shelf: #ffffff;
+  --week-ink: #6b5000;
+  --week-soft: #fff4cc;
+  --week-line: #f0d27a;
+  --urgent-ink: #b42318;
+  --urgent-soft: #fdecea;
+  --expired: #8f1a10;
+  --outline: #1b1f3b;
+  --panel: #22305e;
+  --panel-rim: #4a5c9e;
+  --panel-well: #18224a;
+  --cream: #fff7e6;
+  --candy-green: #4cc764;
+  --candy-green-lip: #2a8a43;
+  --candy-blue: #7cc8ff;
+  --candy-blue-lip: #3b86c9;
+  --candy-red: #ff7a6b;
+  --candy-red-lip: #c8402f;
+  --star: #ffc21a;
+
+  --ow-lg: 4px;
+  --ow-md: 3px;
+  --ow-sm: 2px;
+  --sh-card: 0 1px 0 rgb(18 32 26 / 0.05), 0 12px 28px -12px rgb(18 32 26 / 0.28);
+  --sh-lift: 0 20px 32px -12px rgb(18 32 26 / 0.38);
+  --sh-fridge: 0 30px 60px -20px rgb(4 40 30 / 0.45);
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --tabbar-h: calc(64px + env(safe-area-inset-bottom));
 }
 
 @theme inline {
@@ -34,7 +73,18 @@
   --color-warn-soft: var(--warn-soft);
   --color-soon: var(--soon);
   --color-soon-soft: var(--soon-soft);
+  --color-wall: var(--wall);
+  --color-wall-ink: var(--wall-ink);
+  --color-outline: var(--outline);
+  --color-panel: var(--panel);
+  --color-cream: var(--cream);
+  --color-week-ink: var(--week-ink);
+  --color-week-soft: var(--week-soft);
+  --color-urgent-ink: var(--urgent-ink);
+  --color-urgent-soft: var(--urgent-soft);
+  --color-expired: var(--expired);
   --font-sans: var(--font-anuphan), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-mitr), var(--font-anuphan), sans-serif;
 }
 
 html {
@@ -65,6 +115,458 @@ input {
 
 a {
   text-underline-offset: 3px;
+}
+
+/* ───────── Game-UI kit (fridge-home.md §2.5–2.7) ───────── */
+@layer components {
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  /* Navy panel. Frosted glass where supported (user: "มี background เป็น glass"); opaque navy otherwise.
+     Tint ≥ .8 keeps white text ≥ 6.5:1 even over the white fridge; blur stays small for phone FPS. */
+  .panel {
+    color: #fff;
+    background: var(--panel);
+    border: var(--ow-lg) solid var(--outline);
+    border-radius: 24px;
+    box-shadow:
+      inset 0 0 0 2px var(--panel-rim),
+      inset 0 3px 0 2px rgb(255 255 255 / 0.1),
+      0 6px 0 var(--outline);
+  }
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .panel {
+      background: rgb(34 48 94 / 0.8);
+      -webkit-backdrop-filter: blur(10px) saturate(1.4);
+      backdrop-filter: blur(10px) saturate(1.4);
+    }
+  }
+  .panel-well {
+    background: var(--panel-well);
+    border-radius: 14px;
+    box-shadow: inset 0 2px 0 rgb(0 0 0 / 0.25);
+  }
+
+  .btn-candy {
+    --face: var(--candy-green);
+    --lip: var(--candy-green-lip);
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 0 20px;
+    border-radius: 999px;
+    border: var(--ow-md) solid var(--outline);
+    background: var(--face);
+    color: var(--outline);
+    font: 600 1.0625rem/1 var(--font-display);
+    box-shadow:
+      inset 0 -4px 0 var(--lip),
+      inset 0 3px 0 rgb(255 255 255 / 0.55),
+      0 3px 0 var(--outline);
+    transition: transform 80ms var(--ease-out);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-candy::after {
+    content: "";
+    position: absolute;
+    top: 5px;
+    left: 14%;
+    width: 30%;
+    height: 5px;
+    border-radius: 999px;
+    background: #fff;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .btn-candy:active:not(:disabled) {
+    transform: translateY(3px);
+    box-shadow:
+      inset 0 -1px 0 var(--lip),
+      inset 0 2px 0 rgb(255 255 255 / 0.45);
+  }
+  .btn-candy:disabled {
+    --face: #d9d6ce;
+    --lip: #b5b1a6;
+    box-shadow: inset 0 -4px 0 var(--lip);
+    cursor: wait;
+  }
+  .btn-blue {
+    --face: var(--candy-blue);
+    --lip: var(--candy-blue-lip);
+  }
+  .btn-red {
+    --face: var(--candy-red);
+    --lip: var(--candy-red-lip);
+  }
+  .btn-cream {
+    --face: var(--cream);
+    --lip: #d9c9a3;
+  }
+  .btn-wall {
+    --face: var(--wall);
+    --lip: #c99a00;
+  }
+
+  /* Sticker chip (summary, filters, overflow) */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: var(--ow-sm) solid var(--outline);
+    background: var(--cream);
+    color: var(--outline);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    box-shadow: 0 2px 0 var(--outline);
+    transition: transform 80ms var(--ease-out);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .chip[aria-pressed="true"],
+  .chip[aria-current="page"] {
+    background: var(--panel);
+    color: #fff;
+    box-shadow: none;
+    transform: translateY(2px);
+  }
+
+  /* Status badge: round icon + count in one outlined pill */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    height: 22px;
+    padding: 0 6px 0 3px;
+    border-radius: 999px;
+    border: var(--ow-sm) solid var(--outline);
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .badge[data-tone="week"] {
+    background: var(--week-soft);
+    color: var(--week-ink);
+  }
+  .badge[data-tone="urgent"] {
+    background: var(--urgent-soft);
+    color: var(--urgent-ink);
+  }
+  .badge[data-tone="expired"] {
+    height: 24px;
+    background: var(--expired);
+    color: #fff;
+    border-width: var(--ow-md);
+  }
+
+  /* Outlined card on the game board */
+  .card-game {
+    background: var(--cream);
+    border: var(--ow-md) solid var(--outline);
+    border-radius: 20px;
+    box-shadow: 0 4px 0 var(--outline);
+  }
+
+  /* Text-block ingredient sticker (§4.4) */
+  .sticker {
+    display: grid;
+    place-items: center;
+    padding: 4px;
+    text-align: center;
+    word-break: keep-all;
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.05;
+    background: var(--st-bg);
+    color: var(--st-ink);
+    border: var(--ow-md) solid var(--outline);
+    box-shadow:
+      0 0 0 3px #fff,
+      0 0 0 5px var(--outline),
+      inset 0 3px 0 rgb(255 255 255 / 0.6),
+      inset 0 -4px 0 color-mix(in srgb, var(--st-ink) 18%, transparent);
+  }
+  .sticker[data-size="48"] {
+    border-width: var(--ow-sm);
+    box-shadow:
+      inset 0 3px 0 rgb(255 255 255 / 0.6),
+      inset 0 -4px 0 color-mix(in srgb, var(--st-ink) 18%, transparent);
+  }
+
+  /* Side-bar tile */
+  .tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: 18px;
+    border: var(--ow-md) solid var(--outline);
+    background: var(--cream);
+    color: var(--outline);
+    box-shadow: 0 4px 0 var(--outline);
+    transition:
+      transform 150ms var(--ease-out),
+      opacity 150ms var(--ease-out);
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .tile:hover {
+      transform: translateY(-2px);
+    }
+  }
+  .tile:active,
+  .tile[data-armed] {
+    transform: translateY(3px) scale(0.96);
+    box-shadow: none;
+  }
+  .tile[data-lifted] {
+    opacity: 0.35;
+  }
+
+  /* Fridge */
+  .fridge-cab {
+    background: var(--cab);
+    border: var(--ow-lg) solid var(--outline);
+    border-radius: 32px;
+    padding: 10px;
+    box-shadow:
+      inset 0 4px 0 #fff,
+      inset 0 -6px 0 #dfe9e3,
+      var(--sh-fridge);
+  }
+  .fridge-in {
+    position: relative;
+    border-radius: 22px;
+    border: var(--ow-sm) solid var(--outline);
+    background: linear-gradient(var(--cab-in-top), var(--cab-in-bot));
+    box-shadow: inset 0 8px 24px -8px rgb(4 40 30 / 0.25);
+  }
+  .fridge-in::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(60% 30% at 50% 0, rgb(255 255 255 / 0.7), transparent);
+    pointer-events: none;
+  }
+  .shelf-lip {
+    height: 10px;
+    border-radius: 6px;
+    background: var(--shelf);
+    border: var(--ow-sm) solid var(--outline);
+    box-shadow: 0 2px 4px rgb(4 40 30 / 0.15);
+  }
+  .drop-target {
+    position: absolute;
+    inset: 4px;
+    z-index: 5;
+    display: grid;
+    place-items: center;
+    border: 2px dashed var(--brand);
+    border-radius: 16px;
+    background: rgb(220 239 230 / 0.55);
+    color: var(--brand-ink);
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 120ms var(--ease-out);
+    pointer-events: none;
+  }
+  .drop-target[data-on] {
+    opacity: 1;
+  }
+
+  .fitem {
+    position: relative;
+    display: grid;
+    place-items: center;
+    border-radius: 16px;
+    transition: opacity 200ms var(--ease-out);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+  .fitem::after {
+    content: "";
+    position: absolute;
+    left: 12%;
+    right: 12%;
+    bottom: -5px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgb(18 32 26 / 0.18);
+    z-index: -1;
+  }
+  .fitem:focus-visible,
+  .on-wall:focus-visible {
+    outline-offset: 3px;
+    box-shadow: 0 0 0 2px #fff;
+  }
+  .fitem[data-dim] {
+    opacity: 0.3;
+  }
+  .fitem[data-pop] {
+    animation: pop 320ms var(--ease-spring) both;
+  }
+
+  .details-card {
+    animation: card-in 200ms var(--ease-out) both;
+  }
+
+  dialog.sheet {
+    margin: auto auto 0;
+    width: 100%;
+    max-width: 100%;
+    max-height: 85dvh;
+    padding: 0;
+    border: var(--ow-lg) solid var(--outline);
+    border-bottom: 0;
+    border-radius: 20px 20px 0 0;
+    background: var(--cream);
+    color: var(--ink);
+    overscroll-behavior: contain;
+  }
+  dialog.sheet[open] {
+    animation: sheet-up 280ms var(--ease-out) both;
+  }
+  dialog.sheet::backdrop {
+    background: rgb(18 32 26 / 0.4);
+  }
+  @media (min-width: 1024px) {
+    dialog.sheet {
+      margin: auto;
+      width: 400px;
+      border-bottom: var(--ow-lg) solid var(--outline);
+      border-radius: 20px;
+      box-shadow: 0 6px 0 var(--outline);
+    }
+    dialog.sheet[open] {
+      animation: card-in 200ms var(--ease-out) both;
+    }
+  }
+
+  /* Flies (§9): transform-only orbit; paused while dragging or a dialog is open */
+  .fly {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    will-change: transform;
+    animation: orbit 2.6s linear infinite;
+  }
+  .fly + .fly {
+    animation: orbit 3.4s linear -1.2s infinite reverse;
+  }
+  .fly > span {
+    position: absolute;
+    left: -4px;
+    top: -4px;
+    translate: var(--r, 26px) 0;
+    animation: bob 0.9s ease-in-out infinite alternate;
+  }
+  .fly + .fly > span {
+    --r: 20px;
+  }
+  .fly .wing {
+    transform-origin: 50% 100%;
+    animation: buzz 80ms steps(2) infinite;
+  }
+  @media (min-width: 1024px) {
+    .fly > span {
+      --r: 32px;
+    }
+  }
+  [data-busy] .fly,
+  [data-busy] .fly * {
+    animation-play-state: paused;
+  }
+}
+
+html[data-dragging],
+html[data-dragging] * {
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grabbing;
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+@keyframes lift {
+  to {
+    transform: scale(1.12) rotate(-4deg);
+  }
+}
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+}
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes bob {
+  from {
+    transform: translateY(-3px);
+  }
+  to {
+    transform: translateY(3px);
+  }
+}
+@keyframes buzz {
+  to {
+    transform: scaleY(0.6);
+  }
+}
+@keyframes pulse-soft {
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* One static fly at the item's top-left still reads as "going off". */
+  .fly,
+  .fly > span,
+  .fly .wing {
+    animation: none !important;
+  }
+  .fly {
+    transform: translate(-30px, -30px);
+  }
+  .fly > span {
+    translate: none;
+  }
+  .fly + .fly {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
