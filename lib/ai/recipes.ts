@@ -59,8 +59,8 @@ ${diet ? `ข้อจำกัดด้านอาหาร: ${diet}\n` : ""}�
 - ตอบเป็นภาษาไทย`;
 }
 
-// gemini-2.5-flash now 404s for new keys ("no longer available to new users"); Google points to 3.8-flash.
-const model = () => process.env.GEMINI_MODEL?.trim() || "gemini-3.8-flash";
+// Fallback chain: Gemini often 503s ("high demand") on one model while another is fine.
+const models = () => [...new Set([process.env.GEMINI_MODEL?.trim(), "gemini-3.8-flash", "gemini-flash-latest", "gemini-3-flash-preview"].filter(Boolean) as string[])];
 
 // Gemini's own schema (OpenAPI subset) — guides the model; Zod above is the real gate.
 const S = { type: "STRING" };
@@ -93,22 +93,31 @@ const responseSchema = {
   },
 };
 
-/** Server only. 3 menus that use urgent items first, or null after one retry ("AI ไม่ว่าง"). */
+/** Server only. 3 menus that use urgent items first, or null after trying every model ("AI ไม่ว่าง"). Worst case ~25s. */
 export async function suggestMenus(items: Item[], diet?: string): Promise<Menu[] | null> {
   const key = process.env.GEMINI_API_KEY?.trim(); // Vercel value had a leading \r
   if (!key) return null;
   const body = JSON.stringify({
     contents: [{ parts: [{ text: buildPrompt(items, diet) }] }],
-    generationConfig: { responseMimeType: "application/json", responseSchema },
+    generationConfig: { responseMimeType: "application/json", responseSchema, thinkingConfig: { thinkingLevel: "minimal" } }, // thinking made calls ~20s,
   });
-  for (let attempt = 0; attempt < 2; attempt++) {
+  const start = Date.now();
+  let why = "";
+  for (const [n, model] of models().entries()) {
+    if (n) await new Promise((r) => setTimeout(r, n * 1000)); // back off 1s, 2s, 3s
+    if (Date.now() - start > 12000) break;
     try {
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model()}:generateContent`, { method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": key }, body });
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, { method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": key }, body, signal: AbortSignal.timeout(12000) });
+      why = `${res.status} ${model}`;
       if (!res.ok) continue;
       const json = await res.json();
       const menus = parseMenus(json?.candidates?.[0]?.content?.parts?.[0]?.text);
       if (menus) return normalize(menus, items);
-    } catch {}
+      why = `bad output ${model}`;
+    } catch {
+      why = `network/timeout ${model}`;
+    }
   }
+  console.warn("suggestMenus gave up:", why);
   return null;
 }
