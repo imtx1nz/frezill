@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { todayIn } from "./expiry";
 
 export const CATEGORIES = {
   veg: "ผัก",
@@ -22,16 +23,21 @@ export const lotSchema = z.object({
   zone: z.enum(["chill", "freezer"]),
   // "" from an empty <input type="date"> = no expiry date
   expires_at: z.preprocess((v) => v || null, z.iso.date().nullable()),
+  // blank = bought today (Bangkok); never null, never in the future
+  bought_on: z.preprocess(
+    (v) => v || todayIn(),
+    z.iso.date({ error: "วันที่ซื้อไม่ถูกต้อง" }).refine((d) => d <= todayIn(), "วันที่ซื้อเป็นอนาคตไม่ได้"),
+  ),
 });
 
-export type FefoLot = { id: string; qty: number; expires_at: string | null; created_at: string };
+export type FefoLot = { id: string; qty: number; expires_at: string | null; bought_on: string; created_at: string };
 
 /** Avoids 0.1 + 0.2 style drift on fractional quantities. */
 const round = (n: number) => Math.round(n * 1000) / 1000;
 
 /**
  * First-Expired-First-Out: take `amount` from the lots that expire soonest
- * (no expiry date = last), oldest purchase first on ties. Returns how much to
+ * (no expiry date = last), earlier bought_on, then created_at, on ties. Returns how much to
  * take from each lot and what remains. Never takes more than is available.
  */
 export function fefo(lots: FefoLot[], amount: number) {
@@ -40,6 +46,7 @@ export function fefo(lots: FefoLot[], amount: number) {
     .sort(
       (a, b) =>
         (a.expires_at ?? "9999-12-31").localeCompare(b.expires_at ?? "9999-12-31") ||
+        a.bought_on.localeCompare(b.bought_on) ||
         a.created_at.localeCompare(b.created_at),
     );
   const plan: { id: string; take: number; left: number }[] = [];

@@ -1,11 +1,12 @@
 import { CATEGORIES, UNITS, ZONES } from "@/lib/inventory";
+import { todayIn } from "@/lib/expiry";
 import { NameInput } from "./NameInput";
 
 export const inputClass =
   "h-13 w-full rounded-xl border border-line bg-surface px-4 text-base text-ink outline-none transition-[border-color,box-shadow] duration-150 focus:border-brand focus:shadow-[0_0_0_4px_var(--brand-soft)]";
 const labelClass = "flex flex-col gap-1.5 text-[0.9375rem] font-semibold";
 
-type Lot = { name: string; qty: number; unit: string; category: string; zone: string; expires_at: string | null };
+type Lot = { name: string; qty: number; unit: string; category: string; zone: string; expires_at: string | null; bought_on?: string };
 
 type Existing = Pick<Lot, "name" | "qty" | "unit" | "expires_at">;
 
@@ -48,6 +49,10 @@ export function LotFields({ lot, existing }: { lot?: Lot; existing?: Existing[] 
       <label className={labelClass}>
         วันหมดอายุ (ไม่บังคับ)
         <input name="expires_at" type="date" defaultValue={lot?.expires_at ?? ""} className={inputClass} />
+      </label>
+      <label className={labelClass}>
+        วันที่ซื้อ
+        <input name="bought_on" type="date" max={todayIn()} defaultValue={lot?.bought_on ?? todayIn()} className={inputClass} />
       </label>
       <label className={labelClass}>
         หมวดหมู่

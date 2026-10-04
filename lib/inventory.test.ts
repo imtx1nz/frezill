@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
+import { todayIn } from "./expiry";
 import { fefo, lotSchema } from "./inventory";
 
-const lot = (id: string, qty: number, expires_at: string | null, created_at = "2026-10-01T00:00:00Z") => ({
+const lot = (id: string, qty: number, expires_at: string | null, created_at = "2026-10-01T00:00:00Z", bought_on = created_at.slice(0, 10)) => ({
   id,
   qty,
   expires_at,
+  bought_on,
   created_at,
 });
 
@@ -51,6 +53,28 @@ describe("fefo", () => {
     const lots = [lot("b", 1, "2026-10-09"), lot("a", 1, "2026-10-05")];
     expect(fefo(lots, 0)).toEqual([]);
     expect(lots[0].id).toBe("b");
+  });
+});
+
+describe("fefo bought_on tie-break", () => {
+  it("equal expiry: earlier bought_on first, then created_at", () => {
+    const a = fefo([lot("new", 1, "2026-10-05", "2026-10-01T00:00:00Z", "2026-10-03"), lot("old", 1, "2026-10-05", "2026-10-02T00:00:00Z", "2026-10-01")], 2);
+    expect(a.map((p) => p.id)).toEqual(["old", "new"]);
+    const b = fefo([lot("y", 1, null, "2026-10-02T00:00:00Z", "2026-10-01"), lot("x", 1, null, "2026-10-01T00:00:00Z", "2026-10-01")], 2);
+    expect(b.map((p) => p.id)).toEqual(["x", "y"]);
+  });
+});
+
+describe("lotSchema bought_on", () => {
+  const base = { name: "ไข่ไก่", qty: "4", unit: "ฟอง", category: "dairy_egg", zone: "chill" };
+  it("empty = today (Bangkok)", () => {
+    expect(lotSchema.parse({ ...base, bought_on: "" }).bought_on).toBe(todayIn());
+    expect(lotSchema.parse({ ...base, bought_on: null }).bought_on).toBe(todayIn());
+  });
+  it("rejects future and malformed", () => {
+    expect(lotSchema.safeParse({ ...base, bought_on: "2999-01-01" }).success).toBe(false);
+    expect(lotSchema.safeParse({ ...base, bought_on: "1/1/2026" }).success).toBe(false);
+    expect(lotSchema.parse({ ...base, bought_on: "2026-01-01" }).bought_on).toBe("2026-01-01");
   });
 });
 

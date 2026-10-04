@@ -15,6 +15,11 @@
 - ✅ M5 ขึ้น production แล้ว (2026-10-04, `89ee7ee`): 0003 `recipe_requests` รันแล้ว · Tester (Playwright + บัญชี QA) ผ่านครบ: ได้ 3 เมนูใน 6.7–8.5 วิ, ใช้ของใกล้หมดก่อน, มีคำเตือน AI ทุกการ์ด, "ทำเมนูนี้แล้ว" ตัดของถูก (DB usage_logs ตรง), ครั้งที่ 11 ถูกปฏิเสธ, ไม่มี error/5xx
   - Gemini: `gemini-3.8-flash` → สำรอง `gemini-flash-latest`, `gemini-3-flash-preview` · ปิด thinking (`thinkingLevel: minimal`) เพราะทำให้ช้า ~21 วิ · key ต้องมาจาก project ของ Gmail ส่วนตัว (project จากบัญชีโรงเรียนโดน 403 "denied access")
   - เล็กน้อย: ขอครั้งที่ 11 แล้วการ์ดเมนูเดิมหายไป (เมนูไม่ได้บันทึก) · FEFO ข้ามหลายล็อตในเมนูยังไม่ได้ทดสอบจริง · ภาพ desktop ตอนมีเมนูยังไม่ได้ดู · บัญชี QA ใช้โควตาวันนี้ครบ 10 แล้ว
+- 🚧 branch `bought-on` (ยังไม่ merge/deploy): เพิ่ม "วันที่ซื้อ" (`lots.bought_on`, เว้นว่าง = วันนี้ตามเวลาไทย, ห้ามอนาคต) แสดงที่ /fridge เป็น "ซื้อ <วัน>" และใช้ตัดสิน FEFO เมื่อวันหมดอายุเท่ากัน · **ต้องรัน 0004 ก่อน deploy เสมอ** (โค้ดใหม่ select คอลัมน์ `bought_on`) · ผู้ใช้รันตามลำดับ:
+  1. `npx supabase db query --linked --project-ref wlprvlbdohsjjljrggpk -f supabase/migrations/0004_lots_bought_on.sql`
+  2. `git checkout main && git merge --ff-only bought-on && git push`
+  3. `npx vercel deploy --prod`
+  - ⚠️ branch `m1-invites` มี 0002 ของตัวเอง ต้อง renumber ก่อนใช้
 - ➡️ ถัดไป: ขอบเขต "ทำตอนนี้" เหลือ **แจ้งเตือน web push** (ยังไม่มีแถวในตาราง milestone) ถามผู้ใช้ก่อนว่าจะทำเป็น M6 ไหม
 - 🔧 QA ใช้บัญชี `frezill.qa.*` ได้ (สคริปต์ Playwright เดิมหาย ให้เขียนใหม่ด้วย playwright-core + chromium ใน `~/.cache/ms-playwright`)
 - 🔧 Supabase CLI ล็อกอินแล้ว: รัน migration ได้ด้วย `npx supabase db query --linked --project-ref wlprvlbdohsjjljrggpk -f <file>` (agent โดนบล็อกตอนแก้ production ต้องให้ผู้ใช้รันเองผ่าน `!`)

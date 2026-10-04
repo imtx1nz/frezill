@@ -21,11 +21,12 @@ type Lot = {
   category: keyof typeof CATEGORIES;
   zone: keyof typeof ZONES;
   expires_at: string | null;
+  bought_on: string;
   created_at: string;
 };
 
 const fmt = (n: number) => n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
-const day = (iso: string) => new Date(iso).toLocaleDateString("th-TH", { day: "numeric", month: "short", timeZone: "Asia/Bangkok" });
+const day = (iso: string) => new Date(`${iso.slice(0, 10)}T12:00:00+07:00`).toLocaleDateString("th-TH", { day: "numeric", month: "short", timeZone: "Asia/Bangkok" });
 const btn =
   "flex h-11 flex-1 items-center justify-center rounded-xl border border-line bg-surface px-2 text-[0.9375rem] font-medium text-ink-2 hover:border-ink-3 hover:text-ink";
 
@@ -39,10 +40,11 @@ export default async function FridgePage() {
   const [{ data }, { data: home }] = await Promise.all([
     supabase
       .from("lots")
-      .select("id, fridge_id, name, qty, unit, category, zone, expires_at, created_at")
+      .select("id, fridge_id, name, qty, unit, category, zone, expires_at, bought_on, created_at")
       .gt("qty", 0)
       .order("name")
       .order("expires_at", { nullsFirst: false }) // FEFO order inside each item
+      .order("bought_on")
       .order("created_at"),
     supabase.from("households").select("timezone").limit(1).maybeSingle(),
   ]);
@@ -109,7 +111,7 @@ export default async function FridgePage() {
                       className="flex min-h-11 items-center justify-between gap-3 text-[0.9375rem] text-ink-2 hover:text-ink"
                     >
                       <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                        ล็อต {day(l.created_at)} <ExpiryBadge expiresAt={l.expires_at} today={today} />
+                        ซื้อ {day(l.bought_on)} <ExpiryBadge expiresAt={l.expires_at} today={today} />
                       </span>
                       <span className="shrink-0">
                         {fmt(l.qty)} {l.unit} · แก้ไข ›

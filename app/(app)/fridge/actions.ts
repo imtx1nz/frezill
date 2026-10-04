@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { fefo, lotSchema } from "@/lib/inventory";
 
-const fields = (fd: FormData) => Object.fromEntries(["name", "qty", "unit", "category", "zone", "expires_at"].map((k) => [k, fd.get(k)]));
+const fields = (fd: FormData) => Object.fromEntries(["name", "qty", "unit", "category", "zone", "expires_at", "bought_on"].map((k) => [k, fd.get(k)]));
 
 function done(): never {
   revalidatePath("/fridge");
@@ -60,7 +60,7 @@ async function deduct(
 ) {
   const { data: lots } = await supabase
     .from("lots")
-    .select("id, qty, expires_at, created_at")
+    .select("id, qty, expires_at, bought_on, created_at")
     .eq("fridge_id", fridgeId)
     .eq("name", name)
     .eq("unit", unit)
