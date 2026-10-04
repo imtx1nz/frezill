@@ -443,6 +443,14 @@ a {
     opacity: 1;
   }
 
+  .shelf[data-hot] {
+    outline: 3px solid;
+    outline-offset: -2px;
+    border-radius: 14px;
+  }
+  .shelf[data-hot="ok"] { outline-color: #22a45d; }
+  .shelf[data-hot="full"] { outline-color: #d6382b; }
+
   .fitem {
     position: relative;
     display: grid;

@@ -23,6 +23,7 @@ type FridgeProps = {
   spot: "urgent" | "week" | null;
   popId: string | null;
   over: "freezer" | "chill" | null;
+  hot: { place: Place; full: boolean } | null;
   openKey: string | null;
   canWrite: boolean;
   freezerRef: React.RefObject<HTMLDivElement | null>;
@@ -40,8 +41,9 @@ export function Fridge({ freezerRef, chillRef, ...p }: FridgeProps) {
   const list = (place: Place, label: string, cls: string, mcap: number, dcap: number, small = false) => (
     <ItemList {...p} items={p.byPlace[place]} label={label} className={cls} mcap={mcap} dcap={dcap} small={small} />
   );
+  const hot = (pl: Place) => (p.hot?.place === pl ? (p.hot.full ? "full" : "ok") : undefined);
   const shelf = (place: Place, label: string, extra?: React.ReactNode) => (
-    <div className="relative flex min-h-0 flex-1 flex-col justify-end px-1">
+    <div data-place={place} data-hot={hot(place)} className="shelf relative flex min-h-0 flex-1 flex-col justify-end px-1">
       {extra}
       {list(place, label, "flex items-end gap-2 px-1 pb-1.5", 3, 5)}
       <div className="shelf-lip" />
@@ -59,6 +61,8 @@ export function Fridge({ freezerRef, chillRef, ...p }: FridgeProps) {
             {/* freezer */}
             <div
               ref={freezerRef}
+              data-place="freezer"
+              data-hot={hot("freezer")}
               className="relative flex h-[22%] min-h-[104px] flex-col rounded-2xl border-2 border-outline bg-[var(--freezer)] px-2 pb-1.5 pt-1"
             >
               <p className="flex items-center justify-between text-[0.875rem] font-semibold text-[var(--freezer-ink)]">
@@ -92,7 +96,7 @@ export function Fridge({ freezerRef, chillRef, ...p }: FridgeProps) {
               )}
               {shelf("bottom", "ชั้นล่าง")}
               {/* crisper drawer */}
-              <div className="h-[84px] shrink-0 rounded-[14px] border-2 border-outline bg-white/55 px-1 lg:h-[92px]">
+              <div data-place="drawer" data-hot={hot("drawer")} className="shelf h-[84px] shrink-0 rounded-[14px] border-2 border-outline bg-white/55 px-1 lg:h-[92px]">
                 {list("drawer", "ลิ้นชักผัก", "flex h-full items-end gap-2 px-1 pb-1", 3, 5)}
               </div>
               <div className="drop-target !inset-0" data-on={p.over === "chill" || undefined}>
@@ -102,7 +106,7 @@ export function Fridge({ freezerRef, chillRef, ...p }: FridgeProps) {
           </div>
 
           {/* door: a strip on the right on phones; hangs open on the left on desktop */}
-          <div className="relative border-l-2 border-white py-2 lg:absolute lg:-inset-y-[14px] lg:right-[calc(100%+14px)] lg:w-[150px] lg:origin-right lg:rounded-l-[28px] lg:border-[length:var(--ow-lg)] lg:border-outline lg:bg-[var(--cab)] lg:px-2 lg:[transform:rotateY(55deg)]">
+          <div data-place="door" data-hot={hot("door")} className="shelf relative border-l-2 border-white py-2 lg:absolute lg:-inset-y-[14px] lg:right-[calc(100%+14px)] lg:w-[150px] lg:origin-right lg:rounded-l-[28px] lg:border-[length:var(--ow-lg)] lg:border-outline lg:bg-[var(--cab)] lg:px-2 lg:[transform:rotateY(55deg)]">
             <div aria-hidden="true" className="pointer-events-none absolute inset-x-1 inset-y-2 grid grid-rows-3 lg:inset-x-3">
               {[0, 1, 2].map((i) => (
                 <div key={i} className="h-2.5 self-end rounded-md border-2 border-outline bg-white" />
