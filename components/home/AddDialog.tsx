@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { Minus, Plus, X } from "lucide-react";
+import { Lock, Minus, Plus, X } from "lucide-react";
 import { COLORS, IngredientPicture } from "@/components/IngredientPicture";
 import { Notice } from "@/components/auth/Notice";
 import { PendingButton } from "@/components/inventory/PendingButton";
@@ -54,6 +54,7 @@ export function AddDialog({
   const [unitSel, setUnitSel] = useState<string | null>(null);
   const cat = custom ? resolveCustom(name || "กำหนดเอง", catSel) : cat0;
   const matched = custom && !!catalogMatch(name);
+  const locked = !custom || matched;
   const unit = unitSel ?? cat.unit;
   const guess = guessExpiry(cat, zone, bought);
   const expires = manual ?? guess;
@@ -73,7 +74,7 @@ export function AddDialog({
   return (
     <dialog ref={ref} className="sheet" aria-labelledby="add-title" onClose={onClose}>
       <form action={action} className="flex flex-col gap-4 overflow-y-auto p-4 pb-[calc(16px+env(safe-area-inset-bottom))] lg:p-5">
-        <input type="hidden" name="name" value={custom ? name.trim() : cat.name} />
+        <input type="hidden" name="name" value={locked ? cat.name : name.trim()} />
         <input type="hidden" name="category" value={cat.category} />
         <input type="hidden" name="expiry_guessed" value={manual === null ? "1" : "0"} />
 
@@ -95,9 +96,20 @@ export function AddDialog({
           </button>
         </div>
 
+        {locked && (
+          <p className="flex items-center gap-1.5 text-[0.9375rem] font-semibold">
+            <Lock className="size-4" aria-hidden="true" />
+            {cat.name}
+            {custom && (
+              <button type="button" className="ml-auto text-ink-2 underline" onClick={() => setName("")}>
+                เปลี่ยนเป็นของกำหนดเอง
+              </button>
+            )}
+          </p>
+        )}
         {custom && (
           <>
-            <label className="flex flex-col gap-1.5 text-[0.9375rem] font-semibold">
+            {!locked && <label className="flex flex-col gap-1.5 text-[0.9375rem] font-semibold">
               ชื่อ
               <input
                 value={name}
@@ -108,7 +120,7 @@ export function AddDialog({
                 placeholder="เช่น ผักสลัดบ้านเรา"
                 className={`${field} w-full`}
               />
-            </label>
+            </label>}
             <fieldset>
               <legend className="mb-1.5 text-[0.9375rem] font-semibold">หมวด</legend>
               <div className="flex flex-wrap gap-2">

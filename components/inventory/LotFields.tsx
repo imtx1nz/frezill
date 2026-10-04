@@ -1,3 +1,5 @@
+import { Lock } from "lucide-react";
+import { isLockedName } from "@/lib/catalog";
 import { CATEGORIES, UNITS, ZONES } from "@/lib/inventory";
 import { todayIn } from "@/lib/expiry";
 import { NameInput } from "./NameInput";
@@ -16,7 +18,15 @@ export function LotFields({ lot, existing }: { lot?: Lot; existing?: Existing[] 
     <>
       <label className={labelClass}>
         ชื่อวัตถุดิบ
-        {existing ? (
+        {lot && isLockedName(lot.name) ? (
+          <>
+            <span className="relative">
+              <input name="name" readOnly defaultValue={lot.name} className={`${inputClass} bg-cream pr-10`} />
+              <Lock className="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-ink-2" aria-hidden="true" />
+            </span>
+            <span className="text-[0.875rem] font-normal text-ink-2">ชื่อของรายการมาตรฐานเปลี่ยนไม่ได้</span>
+          </>
+        ) : existing ? (
           <NameInput className={inputClass} existing={existing} />
         ) : (
           <input name="name" required maxLength={60} defaultValue={lot?.name} placeholder="เช่น ไข่ไก่" className={inputClass} />
